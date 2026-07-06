@@ -1,4 +1,6 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 
 const navItems = [
   { label: "Research", to: "/research" },
@@ -9,6 +11,40 @@ const navItems = [
 
 export default function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const client = supabase;
+
+    if (!client) {
+      setIsAuthenticated(false);
+      return;
+    }
+
+    const getSession = async () => {
+      const {
+        data: { session },
+      } = await client.auth.getSession();
+      setIsAuthenticated(Boolean(session));
+    };
+
+    getSession();
+
+    const {
+      data: { subscription },
+    } = client.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(Boolean(session));
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <div
@@ -86,20 +122,44 @@ export default function Layout() {
             </Link>
           );
         })}
-        <div style={{ marginLeft: "auto" }}>
-          <Link
-            to="/login"
-            style={{
-              fontSize: 13,
-              color: "#ccc",
-              textDecoration: "none",
-              border: "1px solid #333",
-              borderRadius: 6,
-              padding: "6px 14px",
-            }}
-          >
-            Analyst login
-          </Link>
+        <div
+          style={{
+            marginLeft: "auto",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              style={{
+                fontSize: 13,
+                color: "#fff",
+                background: "#1f2937",
+                border: "1px solid #374151",
+                borderRadius: 6,
+                padding: "6px 14px",
+                cursor: "pointer",
+              }}
+            >
+              Log out
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              style={{
+                fontSize: 13,
+                color: "#ccc",
+                textDecoration: "none",
+                border: "1px solid #333",
+                borderRadius: 6,
+                padding: "6px 14px",
+              }}
+            >
+              Analyst login
+            </Link>
+          )}
         </div>
       </nav>
 

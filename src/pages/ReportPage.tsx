@@ -1,100 +1,18 @@
-import { useState } from "react";
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-type Rating = "Strong Buy" | "Buy" | "Hold" | "Sell" | "Strong Sell";
-
-interface ThesisUpdate {
-  date: string;
-  note: string;
-  priceTarget: number;
-}
-
-interface Report {
-  ticker: string;
-  companyName: string;
-  sector: string;
-  analyst: string;
-  publishedAt: string;
-  rating: Rating;
-  currentPrice: number;
-  targetPrice: number;
-  timeHorizon: string;
-  executiveSummary: string;
-  investmentHighlights: string[];
-  riskFactors: string[];
-  body: string; 
-  pptxUrl?: string;
-  pdfUrl?: string;
-  slideThumbnails?: string[]; 
-  thesisHistory: ThesisUpdate[];
-}
-
-// ─── Mock Data (replace with your real fetch) ────────────────────────────────
-
-const MOCK_REPORT: Report = {
-  ticker: "ACMR",
-  companyName: "ACM Research, Inc.",
-  sector: "Semiconductors",
-  analyst: "James Whitfield",
-  publishedAt: "June 10, 2025",
-  rating: "Strong Buy",
-  currentPrice: 18.42,
-  targetPrice: 31.0,
-  timeHorizon: "12–18 months",
-  executiveSummary:
-    "ACM Research is a capital-equipment supplier to China's domestic semiconductor foundries. With CXMT and YMTC aggressively ramping capacity, ACMR is positioned as the primary beneficiary of import-substitution tailwinds. We see >68% upside to our $31 price target on 2026E earnings.",
-  investmentHighlights: [
-    "Sole qualified vendor for single-wafer wet-clean tools at CXMT — China's fastest-growing DRAM fab.",
-    "Revenue CAGR of 38% over the last three fiscal years with expanding gross margins (42% in FY24).",
-    "Net cash position of $210M provides runway for R&D without dilution risk.",
-    "New Ultra C Tahoe platform entering pilot at two tier-1 customers; potential $400M+ TAM expansion.",
-  ],
-  riskFactors: [
-    "U.S. export-control escalation could restrict component sourcing.",
-    "Customer concentration: top 3 customers represent ~74% of FY24 revenue.",
-    "RMB/USD exposure — ~60% of costs are RMB-denominated.",
-  ],
-  body: `
-    <h2>Industry backdrop</h2>
-    <p>China's semiconductor self-sufficiency push has accelerated meaningfully since 2022 export restrictions. Domestic fab capex is projected to reach $42B in 2025, a 31% increase year-over-year, driven almost entirely by CXMT, YMTC, and SMIC capacity expansions. ACM Research has been a direct beneficiary — its wet-clean tools are now embedded in the qualification flow of every major domestic logic and memory fab.</p>
-    <h2>Competitive moat</h2>
-    <p>ACMR's SAPS (Space Alternated Phase Shifting) technology delivers particle removal efficiency exceeding ASML-adjacent benchmarks at 28nm and below. The company holds 47 patents around this core process, and switching costs are structurally high: requalification of a cleaning step at a new-node fab takes 9–18 months and costs the customer millions in lost yield.</p>
-    <h2>Financial model</h2>
-    <p>We model FY25 revenue of $820M (consensus: $795M) and EPS of $2.05, expanding to $1.1B and $2.90 in FY26. At our $31 target, the stock trades at 10.7x FY26E EPS — a discount to domestic peers at 14x despite superior growth.</p>
-    <h2>Valuation</h2>
-    <p>Using a blended P/E and EV/EBITDA framework, we arrive at a base-case fair value of $31 and a bull-case of $38 if the Ultra C Tahoe ramp accelerates into FY26. Our bear case of $13 assumes a hard export-control scenario that restricts U.S. component supply.</p>
-  `,
-  pptxUrl: "/reports/acmr-jun2025.pptx",
-  pdfUrl: "/reports/acmr-jun2025.pdf",
-  slideThumbnails: [
-    "https://placehold.co/800x450/1a1a2e/ffffff?text=Slide+1",
-    "https://placehold.co/800x450/16213e/ffffff?text=Slide+2",
-    "https://placehold.co/800x450/0f3460/ffffff?text=Slide+3",
-    "https://placehold.co/800x450/1a1a2e/ffffff?text=Slide+4",
-    "https://placehold.co/800x450/16213e/ffffff?text=Slide+5",
-  ],
-  thesisHistory: [
-    {
-      date: "June 10, 2025",
-      note: "Initiated with Strong Buy. CXMT ramp ahead of schedule.",
-      priceTarget: 31.0,
-    },
-    {
-      date: "March 3, 2025",
-      note: "Added to watchlist after Q4 beat — monitoring Tahoe qualification.",
-      priceTarget: 26.0,
-    },
-  ],
-};
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import type { Rating, Report } from "../data/mockData";
+import { getReportBySlug } from "../lib/reports";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const RATING_STYLES: Record<Rating, { bg: string; text: string; border: string }> = {
-  "Strong Buy":  { bg: "#EAF3DE", text: "#27500A", border: "#639922" },
-  "Buy":         { bg: "#E1F5EE", text: "#085041", border: "#1D9E75" },
-  "Hold":        { bg: "#FAEEDA", text: "#633806", border: "#BA7517" },
-  "Sell":        { bg: "#FAECE7", text: "#712B13", border: "#D85A30" },
+const RATING_STYLES: Record<
+  Rating,
+  { bg: string; text: string; border: string }
+> = {
+  "Strong Buy": { bg: "#EAF3DE", text: "#27500A", border: "#639922" },
+  Buy: { bg: "#E1F5EE", text: "#085041", border: "#1D9E75" },
+  Hold: { bg: "#FAEEDA", text: "#633806", border: "#BA7517" },
+  Sell: { bg: "#FAECE7", text: "#712B13", border: "#D85A30" },
   "Strong Sell": { bg: "#FCEBEB", text: "#791F1F", border: "#E24B4A" },
 };
 
@@ -119,7 +37,15 @@ function RatingBadge({ rating }: { rating: Rating }) {
   );
 }
 
-function StatPill({ label, value, accent }: { label: string; value: string; accent?: string }) {
+function StatPill({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: string;
+}) {
   return (
     <div
       style={{
@@ -130,34 +56,80 @@ function StatPill({ label, value, accent }: { label: string; value: string; acce
         minWidth: 120,
       }}
     >
-      <div style={{ fontSize: 11, color: "#888", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+      <div
+        style={{
+          fontSize: 11,
+          color: "#888",
+          fontWeight: 500,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          marginBottom: 4,
+        }}
+      >
         {label}
       </div>
-      <div style={{ fontSize: 20, fontWeight: 700, color: accent ?? "#111" }}>{value}</div>
+      <div style={{ fontSize: 20, fontWeight: 700, color: accent ?? "#111" }}>
+        {value}
+      </div>
     </div>
   );
 }
 
-function SlideViewer({ thumbnails, pptxUrl, pdfUrl }: { thumbnails: string[]; pptxUrl?: string; pdfUrl?: string }) {
+function SlideViewer({
+  thumbnails,
+  pptxUrl,
+  pdfUrl,
+}: {
+  thumbnails: string[];
+  pptxUrl?: string;
+  pdfUrl?: string;
+}) {
   const [active, setActive] = useState(0);
 
   return (
-    <div style={{ border: "0.5px solid #E0E0E0", borderRadius: 12, overflow: "hidden", background: "#0d0d0d" }}>
+    <div
+      style={{
+        border: "0.5px solid #E0E0E0",
+        borderRadius: 12,
+        overflow: "hidden",
+        background: "#0d0d0d",
+      }}
+    >
       {/* Main slide */}
-      <div style={{ position: "relative", width: "100%", paddingBottom: "56.25%" }}>
+      <div
+        style={{ position: "relative", width: "100%", paddingBottom: "56.25%" }}
+      >
         <img
           src={thumbnails[active]}
           alt={`Slide ${active + 1}`}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
         />
         {active > 0 && (
           <button
             onClick={() => setActive((p) => p - 1)}
             aria-label="Previous slide"
             style={{
-              position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
-              background: "rgba(0,0,0,0.55)", border: "none", borderRadius: "50%",
-              width: 36, height: 36, cursor: "pointer", color: "#fff", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center",
+              position: "absolute",
+              left: 12,
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "rgba(0,0,0,0.55)",
+              border: "none",
+              borderRadius: "50%",
+              width: 36,
+              height: 36,
+              cursor: "pointer",
+              color: "#fff",
+              fontSize: 18,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             ‹
@@ -168,48 +140,103 @@ function SlideViewer({ thumbnails, pptxUrl, pdfUrl }: { thumbnails: string[]; pp
             onClick={() => setActive((p) => p + 1)}
             aria-label="Next slide"
             style={{
-              position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-              background: "rgba(0,0,0,0.55)", border: "none", borderRadius: "50%",
-              width: 36, height: 36, cursor: "pointer", color: "#fff", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center",
+              position: "absolute",
+              right: 12,
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "rgba(0,0,0,0.55)",
+              border: "none",
+              borderRadius: "50%",
+              width: 36,
+              height: 36,
+              cursor: "pointer",
+              color: "#fff",
+              fontSize: 18,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             ›
           </button>
         )}
-        <div style={{
-          position: "absolute", bottom: 12, right: 14,
-          background: "rgba(0,0,0,0.6)", color: "#fff",
-          fontSize: 12, padding: "3px 9px", borderRadius: 20,
-        }}>
+        <div
+          style={{
+            position: "absolute",
+            bottom: 12,
+            right: 14,
+            background: "rgba(0,0,0,0.6)",
+            color: "#fff",
+            fontSize: 12,
+            padding: "3px 9px",
+            borderRadius: 20,
+          }}
+        >
           {active + 1} / {thumbnails.length}
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 6, padding: "10px 12px", overflowX: "auto", background: "#171717" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 6,
+          padding: "10px 12px",
+          overflowX: "auto",
+          background: "#171717",
+        }}
+      >
         {thumbnails.map((src, i) => (
           <button
             key={i}
             onClick={() => setActive(i)}
             aria-label={`Go to slide ${i + 1}`}
             style={{
-              flexShrink: 0, padding: 0, border: `2px solid ${i === active ? "#4A9EFF" : "transparent"}`,
-              borderRadius: 6, cursor: "pointer", background: "none", overflow: "hidden",
+              flexShrink: 0,
+              padding: 0,
+              border: `2px solid ${i === active ? "#4A9EFF" : "transparent"}`,
+              borderRadius: 6,
+              cursor: "pointer",
+              background: "none",
+              overflow: "hidden",
             }}
           >
-            <img src={src} alt={`Slide ${i + 1} thumbnail`} style={{ width: 96, height: 54, objectFit: "cover", display: "block" }} />
+            <img
+              src={src}
+              alt={`Slide ${i + 1} thumbnail`}
+              style={{
+                width: 96,
+                height: 54,
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
           </button>
         ))}
       </div>
 
-      <div style={{ display: "flex", gap: 10, padding: "10px 14px", background: "#111", borderTop: "0.5px solid #222" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          padding: "10px 14px",
+          background: "#111",
+          borderTop: "0.5px solid #222",
+        }}
+      >
         {pptxUrl && (
           <a
             href={pptxUrl}
             download
             style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              fontSize: 13, color: "#ccc", textDecoration: "none",
-              border: "0.5px solid #333", borderRadius: 6, padding: "5px 12px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13,
+              color: "#ccc",
+              textDecoration: "none",
+              border: "0.5px solid #333",
+              borderRadius: 6,
+              padding: "5px 12px",
               background: "#1a1a1a",
             }}
           >
@@ -221,9 +248,15 @@ function SlideViewer({ thumbnails, pptxUrl, pdfUrl }: { thumbnails: string[]; pp
             href={pdfUrl}
             download
             style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              fontSize: 13, color: "#ccc", textDecoration: "none",
-              border: "0.5px solid #333", borderRadius: 6, padding: "5px 12px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13,
+              color: "#ccc",
+              textDecoration: "none",
+              border: "0.5px solid #333",
+              borderRadius: 6,
+              padding: "5px 12px",
               background: "#1a1a1a",
             }}
           >
@@ -238,9 +271,68 @@ function SlideViewer({ thumbnails, pptxUrl, pdfUrl }: { thumbnails: string[]; pp
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ReportPage() {
-  const report = MOCK_REPORT;
+  const { slug = "" } = useParams();
+  const [report, setReport] = useState<Report | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const upside = (((report.targetPrice - report.currentPrice) / report.currentPrice) * 100).toFixed(1);
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    getReportBySlug(slug)
+      .then(setReport)
+      .catch(() => setError("We couldn't find that report."))
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <main
+        style={{
+          maxWidth: 820,
+          margin: "0 auto",
+          padding: "80px 24px",
+          textAlign: "center",
+          color: "#999",
+          fontSize: 14,
+        }}
+      >
+        Loading report…
+      </main>
+    );
+  }
+
+  if (error || !report) {
+    return (
+      <main
+        style={{
+          maxWidth: 820,
+          margin: "0 auto",
+          padding: "80px 24px",
+          textAlign: "center",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: 22,
+            fontWeight: 700,
+            color: "#111",
+            margin: "0 0 8px",
+          }}
+        >
+          Report not found
+        </h1>
+        <p style={{ color: "#888", fontSize: 14 }}>
+          {error ?? "This report doesn't exist or may have been unpublished."}
+        </p>
+      </main>
+    );
+  }
+
+  const upside = (
+    ((report.targetPrice - report.currentPrice) / report.currentPrice) *
+    100
+  ).toFixed(1);
   const isPositive = report.targetPrice >= report.currentPrice;
 
   return (
@@ -254,16 +346,39 @@ export default function ReportPage() {
         lineHeight: 1.65,
       }}
     >
-      <nav style={{ fontSize: 13, color: "#888", marginBottom: 28, display: "flex", gap: 6, alignItems: "center" }}>
-        <a href="/research" style={{ color: "#888", textDecoration: "none" }}>Research</a>
+      <nav
+        style={{
+          fontSize: 13,
+          color: "#888",
+          marginBottom: 28,
+          display: "flex",
+          gap: 6,
+          alignItems: "center",
+        }}
+      >
+        <a href="/research" style={{ color: "#888", textDecoration: "none" }}>
+          Research
+        </a>
         <span>›</span>
-        <a href={`/research?sector=${report.sector}`} style={{ color: "#888", textDecoration: "none" }}>{report.sector}</a>
+        <a
+          href={`/sectors/${report.sector}`}
+          style={{ color: "#888", textDecoration: "none" }}
+        >
+          {report.sector}
+        </a>
         <span>›</span>
         <span style={{ color: "#333" }}>{report.ticker}</span>
       </nav>
 
       <header style={{ marginBottom: 32 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 12,
+          }}
+        >
           <span
             style={{
               fontFamily: "'Courier New', monospace",
@@ -279,10 +394,20 @@ export default function ReportPage() {
             {report.ticker}
           </span>
           <RatingBadge rating={report.rating} />
-          <span style={{ fontSize: 13, color: "#888", marginLeft: "auto" }}>{report.publishedAt}</span>
+          <span style={{ fontSize: 13, color: "#888", marginLeft: "auto" }}>
+            {report.publishedAt}
+          </span>
         </div>
 
-        <h1 style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.2, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
+        <h1
+          style={{
+            fontSize: 34,
+            fontWeight: 800,
+            lineHeight: 1.2,
+            margin: "0 0 8px",
+            letterSpacing: "-0.02em",
+          }}
+        >
           {report.companyName}
         </h1>
         <p style={{ fontSize: 15, color: "#555", margin: "0 0 24px" }}>
@@ -290,8 +415,15 @@ export default function ReportPage() {
         </p>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          <StatPill label="Current price" value={`$${report.currentPrice.toFixed(2)}`} />
-          <StatPill label="Price target" value={`$${report.targetPrice.toFixed(2)}`} accent="#185FA5" />
+          <StatPill
+            label="Current price"
+            value={`$${report.currentPrice.toFixed(2)}`}
+          />
+          <StatPill
+            label="Price target"
+            value={`$${report.targetPrice.toFixed(2)}`}
+            accent="#185FA5"
+          />
           <StatPill
             label="Expected upside"
             value={`${isPositive ? "+" : ""}${upside}%`}
@@ -301,7 +433,13 @@ export default function ReportPage() {
         </div>
       </header>
 
-      <hr style={{ border: "none", borderTop: "0.5px solid #E5E5E5", margin: "0 0 36px" }} />
+      <hr
+        style={{
+          border: "none",
+          borderTop: "0.5px solid #E5E5E5",
+          margin: "0 0 36px",
+        }}
+      />
 
       <section style={{ marginBottom: 36 }}>
         <div
@@ -311,34 +449,114 @@ export default function ReportPage() {
             borderRadius: 0,
           }}
         >
-          <p style={{ fontSize: 16, color: "#222", margin: 0, fontStyle: "italic", lineHeight: 1.7 }}>
+          <p
+            style={{
+              fontSize: 16,
+              color: "#222",
+              margin: 0,
+              fontStyle: "italic",
+              lineHeight: 1.7,
+            }}
+          >
             {report.executiveSummary}
           </p>
         </div>
       </section>
 
-      <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 40 }}>
-        <div style={{ background: "#EAF3DE", border: "0.5px solid #C0DD97", borderRadius: 10, padding: "18px 20px" }}>
-          <h3 style={{ fontSize: 13, fontWeight: 700, color: "#27500A", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 12px" }}>
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 16,
+          marginBottom: 40,
+        }}
+      >
+        <div
+          style={{
+            background: "#EAF3DE",
+            border: "0.5px solid #C0DD97",
+            borderRadius: 10,
+            padding: "18px 20px",
+          }}
+        >
+          <h3
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#27500A",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              margin: "0 0 12px",
+            }}
+          >
             Investment highlights
           </h3>
-          <ul style={{ margin: 0, padding: "0 0 0 16px", fontSize: 14, color: "#3B6D11", lineHeight: 1.7 }}>
-            {report.investmentHighlights.map((h, i) => <li key={i} style={{ marginBottom: 6 }}>{h}</li>)}
+          <ul
+            style={{
+              margin: 0,
+              padding: "0 0 0 16px",
+              fontSize: 14,
+              color: "#3B6D11",
+              lineHeight: 1.7,
+            }}
+          >
+            {report.investmentHighlights.map((h, i) => (
+              <li key={i} style={{ marginBottom: 6 }}>
+                {h}
+              </li>
+            ))}
           </ul>
         </div>
-        <div style={{ background: "#FCEBEB", border: "0.5px solid #F7C1C1", borderRadius: 10, padding: "18px 20px" }}>
-          <h3 style={{ fontSize: 13, fontWeight: 700, color: "#791F1F", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 12px" }}>
+        <div
+          style={{
+            background: "#FCEBEB",
+            border: "0.5px solid #F7C1C1",
+            borderRadius: 10,
+            padding: "18px 20px",
+          }}
+        >
+          <h3
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#791F1F",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              margin: "0 0 12px",
+            }}
+          >
             Risk factors
           </h3>
-          <ul style={{ margin: 0, padding: "0 0 0 16px", fontSize: 14, color: "#A32D2D", lineHeight: 1.7 }}>
-            {report.riskFactors.map((r, i) => <li key={i} style={{ marginBottom: 6 }}>{r}</li>)}
+          <ul
+            style={{
+              margin: 0,
+              padding: "0 0 0 16px",
+              fontSize: 14,
+              color: "#A32D2D",
+              lineHeight: 1.7,
+            }}
+          >
+            {report.riskFactors.map((r, i) => (
+              <li key={i} style={{ marginBottom: 6 }}>
+                {r}
+              </li>
+            ))}
           </ul>
         </div>
       </section>
 
       {report.slideThumbnails && report.slideThumbnails.length > 0 && (
         <section style={{ marginBottom: 48 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 14px", color: "#111" }}>Presentation deck</h2>
+          <h2
+            style={{
+              fontSize: 16,
+              fontWeight: 700,
+              margin: "0 0 14px",
+              color: "#111",
+            }}
+          >
+            Presentation deck
+          </h2>
           <SlideViewer
             thumbnails={report.slideThumbnails}
             pptxUrl={report.pptxUrl}
@@ -348,12 +566,26 @@ export default function ReportPage() {
       )}
 
       <article
-        style={{ fontSize: 16, lineHeight: 1.8, color: "#222", marginBottom: 56 }}
+        style={{
+          fontSize: 16,
+          lineHeight: 1.8,
+          color: "#222",
+          marginBottom: 56,
+        }}
         dangerouslySetInnerHTML={{ __html: report.body }}
       />
 
       <section>
-        <h2 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 20px", color: "#111" }}>Thesis history</h2>
+        <h2
+          style={{
+            fontSize: 16,
+            fontWeight: 700,
+            margin: "0 0 20px",
+            color: "#111",
+          }}
+        >
+          Thesis history
+        </h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
           {report.thesisHistory.map((entry, i) => (
             <div
@@ -364,12 +596,24 @@ export default function ReportPage() {
                 gap: 16,
                 alignItems: "start",
                 padding: "16px 0",
-                borderBottom: i < report.thesisHistory.length - 1 ? "0.5px solid #EBEBEB" : "none",
+                borderBottom:
+                  i < report.thesisHistory.length - 1
+                    ? "0.5px solid #EBEBEB"
+                    : "none",
               }}
             >
-              <span style={{ fontSize: 13, color: "#888", paddingTop: 1 }}>{entry.date}</span>
+              <span style={{ fontSize: 13, color: "#888", paddingTop: 1 }}>
+                {entry.date}
+              </span>
               <span style={{ fontSize: 14, color: "#333" }}>{entry.note}</span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: "#185FA5", whiteSpace: "nowrap" }}>
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#185FA5",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 PT ${entry.priceTarget.toFixed(2)}
               </span>
             </div>
@@ -377,8 +621,21 @@ export default function ReportPage() {
         </div>
       </section>
 
-      <div style={{ marginTop: 56, padding: "16px 20px", background: "#F5F5F5", borderRadius: 8, fontSize: 12, color: "#999", lineHeight: 1.6 }}>
-        This report is published by Texas Valuation &amp; Modeling for informational purposes only and does not constitute investment advice. Past performance is not indicative of future results. Please see our full disclosures page before acting on any information contained herein.
+      <div
+        style={{
+          marginTop: 56,
+          padding: "16px 20px",
+          background: "#F5F5F5",
+          borderRadius: 8,
+          fontSize: 12,
+          color: "#999",
+          lineHeight: 1.6,
+        }}
+      >
+        This report is published by Texas Valuation &amp; Modeling for
+        informational purposes only and does not constitute investment advice.
+        Past performance is not indicative of future results. Please see our
+        full disclosures page before acting on any information contained herein.
       </div>
     </main>
   );

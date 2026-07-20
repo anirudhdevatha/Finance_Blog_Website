@@ -1,4 +1,12 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  createReport,
+  updateReport,
+  deleteReport,
+  getReportForEdit,
+  uploadReportAsset,
+} from "../lib/reports";
 
 type Rating = "Strong Buy" | "Buy" | "Hold" | "Sell" | "Strong Sell";
 
@@ -17,35 +25,78 @@ interface PostForm {
   body: string;
   pptxFile: File | null;
   pdfFile: File | null;
+  // When editing, these hold the URLs already saved in the database. A new
+  // upload in pptxFile/pdfFile overrides the matching one; otherwise the
+  // existing file stays attached.
+  existingPptxUrl: string | null;
+  existingPdfUrl: string | null;
 }
 
 const SECTORS = [
-  "Semiconductors", "Technology", "Energy", "Industrials",
-  "Infrastructure", "Financials", "Healthcare", "Consumer", "Real Estate", "Materials",
+  "Semiconductors",
+  "Technology",
+  "Energy",
+  "Industrials",
+  "Infrastructure",
+  "Financials",
+  "Healthcare",
+  "Consumer",
+  "Real Estate",
+  "Materials",
 ];
 
 const RATINGS: Rating[] = ["Strong Buy", "Buy", "Hold", "Sell", "Strong Sell"];
 
 const RATING_COLORS: Record<Rating, string> = {
   "Strong Buy": "#27500A",
-  "Buy": "#085041",
-  "Hold": "#633806",
-  "Sell": "#712B13",
+  Buy: "#085041",
+  Hold: "#633806",
+  Sell: "#712B13",
   "Strong Sell": "#791F1F",
+};
+
+const EMPTY_FORM: PostForm = {
+  ticker: "",
+  companyName: "",
+  sector: "",
+  analyst: "",
+  rating: "Strong Buy",
+  currentPrice: "",
+  targetPrice: "",
+  timeHorizon: "",
+  executiveSummary: "",
+  investmentHighlights: [""],
+  riskFactors: [""],
+  body: "",
+  pptxFile: null,
+  pdfFile: null,
+  existingPptxUrl: null,
+  existingPdfUrl: null,
 };
 
 // ─── Small reusable bits ──────────────────────────────────────────────────────
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label style={{ fontSize: 13, fontWeight: 600, color: "#333", display: "block", marginBottom: 6 }}>
+    <label
+      style={{
+        fontSize: 13,
+        fontWeight: 600,
+        color: "#333",
+        display: "block",
+        marginBottom: 6,
+      }}
+    >
       {children}
     </label>
   );
 }
 
 function Input({
-  value, onChange, placeholder, type = "text",
+  value,
+  onChange,
+  placeholder,
+  type = "text",
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -75,7 +126,10 @@ function Input({
 }
 
 function Textarea({
-  value, onChange, placeholder, rows = 4,
+  value,
+  onChange,
+  placeholder,
+  rows = 4,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -106,7 +160,13 @@ function Textarea({
   );
 }
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div
       style={{
@@ -117,7 +177,16 @@ function SectionCard({ title, children }: { title: string; children: React.React
         marginBottom: 20,
       }}
     >
-      <h2 style={{ fontSize: 14, fontWeight: 700, color: "#111", margin: "0 0 20px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+      <h2
+        style={{
+          fontSize: 14,
+          fontWeight: 700,
+          color: "#111",
+          margin: "0 0 20px",
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+        }}
+      >
         {title}
       </h2>
       {children}
@@ -126,7 +195,10 @@ function SectionCard({ title, children }: { title: string; children: React.React
 }
 
 function FileDropZone({
-  label, accept, file, onFile,
+  label,
+  accept,
+  file,
+  onFile,
 }: {
   label: string;
   accept: string;
@@ -146,7 +218,10 @@ function FileDropZone({
   return (
     <div
       onClick={() => inputRef.current?.click()}
-      onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
       style={{
@@ -164,21 +239,35 @@ function FileDropZone({
         type="file"
         accept={accept}
         style={{ display: "none" }}
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onFile(f);
+        }}
       />
       <div style={{ fontSize: 24, marginBottom: 8 }}>{file ? "✅" : "📎"}</div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: file ? "#27500A" : "#555", marginBottom: 4 }}>
+      <div
+        style={{
+          fontSize: 14,
+          fontWeight: 600,
+          color: file ? "#27500A" : "#555",
+          marginBottom: 4,
+        }}
+      >
         {file ? file.name : label}
       </div>
       <div style={{ fontSize: 12, color: "#999" }}>
-        {file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "Click or drag & drop"}
+        {file
+          ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
+          : "Click or drag & drop"}
       </div>
     </div>
   );
 }
 
 function BulletListEditor({
-  items, onChange, placeholder,
+  items,
+  onChange,
+  placeholder,
 }: {
   items: string[];
   onChange: (items: string[]) => void;
@@ -202,16 +291,28 @@ function BulletListEditor({
             onChange={(e) => update(i, e.target.value)}
             placeholder={placeholder}
             style={{
-              flex: 1, padding: "8px 12px", border: "1px solid #E0E0E0",
-              borderRadius: 8, fontSize: 14, color: "#111", background: "#fff",
-              outline: "none", fontFamily: "inherit",
+              flex: 1,
+              padding: "8px 12px",
+              border: "1px solid #E0E0E0",
+              borderRadius: 8,
+              fontSize: 14,
+              color: "#111",
+              background: "#fff",
+              outline: "none",
+              fontFamily: "inherit",
             }}
           />
           <button
+            type="button"
             onClick={() => remove(i)}
             style={{
-              background: "none", border: "none", color: "#ccc",
-              cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 4px",
+              background: "none",
+              border: "none",
+              color: "#ccc",
+              cursor: "pointer",
+              fontSize: 18,
+              lineHeight: 1,
+              padding: "0 4px",
               flexShrink: 0,
             }}
           >
@@ -220,11 +321,18 @@ function BulletListEditor({
         </div>
       ))}
       <button
+        type="button"
         onClick={add}
         style={{
-          alignSelf: "flex-start", background: "none", border: "1px dashed #D0D0D0",
-          borderRadius: 8, padding: "6px 14px", fontSize: 13, color: "#888",
-          cursor: "pointer", marginTop: 4,
+          alignSelf: "flex-start",
+          background: "none",
+          border: "1px dashed #D0D0D0",
+          borderRadius: 8,
+          padding: "6px 14px",
+          fontSize: 13,
+          color: "#888",
+          cursor: "pointer",
+          marginTop: 4,
         }}
       >
         + Add item
@@ -236,70 +344,269 @@ function BulletListEditor({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CreatePostPage() {
-  const [form, setForm] = useState<PostForm>({
-    ticker: "",
-    companyName: "",
-    sector: "",
-    analyst: "",
-    rating: "Strong Buy",
-    currentPrice: "",
-    targetPrice: "",
-    timeHorizon: "",
-    executiveSummary: "",
-    investmentHighlights: [""],
-    riskFactors: [""],
-    body: "",
-    pptxFile: null,
-    pdfFile: null,
-  });
+  const navigate = useNavigate();
+  const { slug: editSlug } = useParams(); // present only when editing an existing report
+  const isEditMode = Boolean(editSlug);
+
+  const [form, setForm] = useState<PostForm>(EMPTY_FORM);
+  const [loadingExisting, setLoadingExisting] = useState(isEditMode);
 
   const [publishing, setPublishing] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [published, setPublished] = useState(false);
+  const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // In edit mode, load the existing report and prefill the form.
+  useEffect(() => {
+    if (!editSlug) return;
+
+    setLoadingExisting(true);
+    getReportForEdit(editSlug)
+      .then((report) => {
+        setForm({
+          ticker: report.ticker,
+          companyName: report.companyName,
+          sector: report.sector,
+          analyst: report.analyst,
+          rating: report.rating,
+          currentPrice: String(report.currentPrice),
+          targetPrice: String(report.targetPrice),
+          timeHorizon: report.timeHorizon,
+          executiveSummary: report.executiveSummary,
+          investmentHighlights: report.investmentHighlights.length
+            ? report.investmentHighlights
+            : [""],
+          riskFactors: report.riskFactors.length ? report.riskFactors : [""],
+          body: report.body,
+          pptxFile: null,
+          pdfFile: null,
+          existingPptxUrl: report.pptxUrl ?? null,
+          existingPdfUrl: report.pdfUrl ?? null,
+        });
+      })
+      .catch((err) =>
+        setError(err.message || "Couldn't load that report for editing."),
+      )
+      .finally(() => setLoadingExisting(false));
+  }, [editSlug]);
 
   const set = <K extends keyof PostForm>(key: K, value: PostForm[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handlePublish = async (e: React.FormEvent) => {
+  // Shared save logic for both "Save draft" and "Publish report"
+  const saveReport = async (status: "draft" | "published") => {
+    setError(null);
+
+    if (!form.ticker || !form.companyName || !form.sector || !form.analyst) {
+      setError("Ticker, company name, sector, and analyst are required.");
+      return;
+    }
+    if (!form.currentPrice || !form.targetPrice) {
+      setError("Current price and target price are required.");
+      return;
+    }
+
+    const isPublish = status === "published";
+    isPublish ? setPublishing(true) : setSavingDraft(true);
+
+    try {
+      // A new upload overrides the existing file; otherwise keep what's already saved.
+      const pptxUrl = form.pptxFile
+        ? await uploadReportAsset(form.pptxFile)
+        : (form.existingPptxUrl ?? undefined);
+      const pdfUrl = form.pdfFile
+        ? await uploadReportAsset(form.pdfFile)
+        : (form.existingPdfUrl ?? undefined);
+
+      const payload = {
+        ticker: form.ticker,
+        companyName: form.companyName,
+        sector: form.sector,
+        analyst: form.analyst,
+        rating: form.rating,
+        currentPrice: parseFloat(form.currentPrice),
+        targetPrice: parseFloat(form.targetPrice),
+        executiveSummary: form.executiveSummary,
+        featured: false,
+        timeHorizon: form.timeHorizon,
+        investmentHighlights: form.investmentHighlights.filter(
+          (v) => v.trim() !== "",
+        ),
+        riskFactors: form.riskFactors.filter((v) => v.trim() !== ""),
+        body: form.body,
+        catalysts: [],
+        pptxUrl,
+        pdfUrl,
+        status,
+      };
+
+      const report =
+        isEditMode && editSlug
+          ? await updateReport(editSlug, payload)
+          : await createReport(payload);
+
+      if (isPublish) {
+        setPublishedSlug(report.slug);
+        setPublished(true);
+      } else {
+        // Draft saved quietly — stay on the page so the analyst can keep editing.
+        setError(null);
+        alert("Draft saved.");
+      }
+    } catch (err: any) {
+      setError(
+        err.message || "Something went wrong while saving. Please try again.",
+      );
+    } finally {
+      setPublishing(false);
+      setSavingDraft(false);
+    }
+  };
+
+  const handlePublish = (e: React.FormEvent) => {
     e.preventDefault();
-    setPublishing(true);
-    // TODO: build FormData, POST to your backend
-    const data = new FormData();
-    Object.entries(form).forEach(([k, v]) => {
-      if (v instanceof File) data.append(k, v);
-      else if (Array.isArray(v)) data.append(k, JSON.stringify(v));
-      else if (v !== null) data.append(k, String(v));
-    });
-    await new Promise((r) => setTimeout(r, 1200)); // remove this fake delay
-    setPublishing(false);
-    setPublished(true);
+    saveReport("published");
+  };
+
+  const handleSaveDraft = () => {
+    saveReport("draft");
+  };
+
+  const handleDelete = async () => {
+    if (!editSlug) return;
+    const confirmed = window.confirm(
+      `Delete "${form.companyName || editSlug}"? This can't be undone.`,
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setError(null);
+    try {
+      await deleteReport(editSlug);
+      navigate("/admin");
+    } catch (err: any) {
+      setError(err.message || "Couldn't delete this report.");
+      setDeleting(false);
+    }
   };
 
   const upside =
     form.currentPrice && form.targetPrice
-      ? (((parseFloat(form.targetPrice) - parseFloat(form.currentPrice)) / parseFloat(form.currentPrice)) * 100).toFixed(1)
+      ? (
+          ((parseFloat(form.targetPrice) - parseFloat(form.currentPrice)) /
+            parseFloat(form.currentPrice)) *
+          100
+        ).toFixed(1)
       : null;
+
+  if (loadingExisting) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+          background: "#F7F7F5",
+          color: "#999",
+          fontSize: 14,
+        }}
+      >
+        Loading report…
+      </div>
+    );
+  }
 
   if (published) {
     return (
-      <div style={{
-        minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-        fontFamily: "'Inter', 'Helvetica Neue', sans-serif", background: "#F7F7F5",
-      }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+          background: "#F7F7F5",
+        }}
+      >
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111", margin: "0 0 8px" }}>Report published</h1>
+          <h1
+            style={{
+              fontSize: 24,
+              fontWeight: 800,
+              color: "#111",
+              margin: "0 0 8px",
+            }}
+          >
+            {isEditMode ? "Report updated" : "Report published"}
+          </h1>
           <p style={{ color: "#888", fontSize: 15, margin: "0 0 28px" }}>
             {form.ticker} — {form.companyName} is now live.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-            <a href={`/reports/${form.ticker.toLowerCase()}`}
-              style={{ padding: "10px 20px", background: "#0D1117", color: "#fff", borderRadius: 8, fontSize: 14, fontWeight: 600, textDecoration: "none" }}>
+            <a
+              href={`/reports/${publishedSlug}`}
+              onClick={(e) => {
+                e.preventDefault();
+                navigate(`/reports/${publishedSlug}`);
+              }}
+              style={{
+                padding: "10px 20px",
+                background: "#0D1117",
+                color: "#fff",
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
               View report →
             </a>
-            <button onClick={() => { setPublished(false); setForm({ ticker: "", companyName: "", sector: "", analyst: "", rating: "Strong Buy", currentPrice: "", targetPrice: "", timeHorizon: "", executiveSummary: "", investmentHighlights: [""], riskFactors: [""], body: "", pptxFile: null, pdfFile: null }); }}
-              style={{ padding: "10px 20px", background: "#fff", border: "1px solid #E0E0E0", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", color: "#333" }}>
-              Post another
-            </button>
+            {isEditMode ? (
+              <a
+                href="/admin"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/admin");
+                }}
+                style={{
+                  padding: "10px 20px",
+                  background: "#fff",
+                  border: "1px solid #E0E0E0",
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  color: "#333",
+                }}
+              >
+                Back to dashboard
+              </a>
+            ) : (
+              <button
+                onClick={() => {
+                  setPublished(false);
+                  setPublishedSlug(null);
+                  setForm(EMPTY_FORM);
+                }}
+                style={{
+                  padding: "10px 20px",
+                  background: "#fff",
+                  border: "1px solid #E0E0E0",
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  color: "#333",
+                }}
+              >
+                Post another
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -307,91 +614,207 @@ export default function CreatePostPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F7F7F5", fontFamily: "'Inter', 'Helvetica Neue', sans-serif" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#F7F7F5",
+        fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+      }}
+    >
       {/* Top bar */}
-      <div style={{
-        background: "#0D1117", padding: "14px 32px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
+      <div
+        style={{
+          background: "#0D1117",
+          padding: "14px 32px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{
-            fontFamily: "'Courier New', monospace", fontWeight: 700, fontSize: 12,
-            background: "#fff", color: "#0D1117", padding: "2px 7px", borderRadius: 4,
-          }}>TVM</span>
+          <span
+            style={{
+              fontFamily: "'Courier New', monospace",
+              fontWeight: 700,
+              fontSize: 12,
+              background: "#fff",
+              color: "#0D1117",
+              padding: "2px 7px",
+              borderRadius: 4,
+            }}
+          >
+            TVM
+          </span>
           <span style={{ color: "#666", fontSize: 13 }}>/ Admin</span>
           <span style={{ color: "#444", fontSize: 13 }}>/</span>
           <span style={{ color: "#aaa", fontSize: 13 }}>New Report</span>
         </div>
-        <a href="/admin" style={{ color: "#666", fontSize: 13, textDecoration: "none" }}>← Back to dashboard</a>
       </div>
 
-      <form onSubmit={handlePublish} style={{ maxWidth: 760, margin: "0 auto", padding: "40px 24px 100px" }}>
+      <form
+        onSubmit={handlePublish}
+        style={{ maxWidth: 760, margin: "0 auto", padding: "40px 24px 100px" }}
+      >
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: "#111", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
-            New research report
+          <h1
+            style={{
+              fontSize: 26,
+              fontWeight: 800,
+              color: "#111",
+              margin: "0 0 4px",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            {isEditMode ? "Edit research report" : "New research report"}
           </h1>
-          <p style={{ fontSize: 14, color: "#888", margin: 0 }}>Fill in the details below and upload your files to publish.</p>
+          <p style={{ fontSize: 14, color: "#888", margin: 0 }}>
+            {isEditMode
+              ? "Update the details below. Changes go live as soon as you publish."
+              : "Fill in the details below and upload your files to publish."}
+          </p>
         </div>
+
+        {error && (
+          <div
+            style={{
+              background: "#FDECEC",
+              border: "1px solid #F3C4C4",
+              borderRadius: 8,
+              padding: "12px 16px",
+              marginBottom: 20,
+              color: "#791F1F",
+              fontSize: 14,
+            }}
+          >
+            {error}
+          </div>
+        )}
 
         {/* Company info */}
         <SectionCard title="Company">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 14, marginBottom: 14 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 2fr",
+              gap: 14,
+              marginBottom: 14,
+            }}
+          >
             <div>
               <Label>Ticker *</Label>
-              <Input value={form.ticker} onChange={(v) => set("ticker", v.toUpperCase())} placeholder="AAPL" />
+              <Input
+                value={form.ticker}
+                onChange={(v) => set("ticker", v.toUpperCase())}
+                placeholder="AAPL"
+              />
             </div>
             <div>
               <Label>Company name *</Label>
-              <Input value={form.companyName} onChange={(v) => set("companyName", v)} placeholder="Apple Inc." />
+              <Input
+                value={form.companyName}
+                onChange={(v) => set("companyName", v)}
+                placeholder="Apple Inc."
+              />
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}
+          >
             <div>
               <Label>Sector *</Label>
               <select
                 value={form.sector}
                 onChange={(e) => set("sector", e.target.value)}
                 style={{
-                  width: "100%", padding: "10px 12px", border: "1px solid #E0E0E0",
-                  borderRadius: 8, fontSize: 14, color: form.sector ? "#111" : "#999",
-                  background: "#fff", outline: "none", fontFamily: "inherit",
+                  width: "100%",
+                  padding: "10px 12px",
+                  border: "1px solid #E0E0E0",
+                  borderRadius: 8,
+                  fontSize: 14,
+                  color: form.sector ? "#111" : "#999",
+                  background: "#fff",
+                  outline: "none",
+                  fontFamily: "inherit",
                 }}
               >
-                <option value="" disabled>Select sector</option>
-                {SECTORS.map((s) => <option key={s} value={s}>{s}</option>)}
+                <option value="" disabled>
+                  Select sector
+                </option>
+                {SECTORS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <Label>Analyst name *</Label>
-              <Input value={form.analyst} onChange={(v) => set("analyst", v)} placeholder="Your name" />
+              <Input
+                value={form.analyst}
+                onChange={(v) => set("analyst", v)}
+                placeholder="Your name"
+              />
             </div>
           </div>
         </SectionCard>
 
         {/* Investment metrics */}
         <SectionCard title="Investment metrics">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 14 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: 14,
+              marginBottom: 14,
+            }}
+          >
             <div>
               <Label>Current price ($)</Label>
-              <Input type="number" value={form.currentPrice} onChange={(v) => set("currentPrice", v)} placeholder="18.42" />
+              <Input
+                type="number"
+                value={form.currentPrice}
+                onChange={(v) => set("currentPrice", v)}
+                placeholder="18.42"
+              />
             </div>
             <div>
               <Label>Price target ($)</Label>
-              <Input type="number" value={form.targetPrice} onChange={(v) => set("targetPrice", v)} placeholder="31.00" />
+              <Input
+                type="number"
+                value={form.targetPrice}
+                onChange={(v) => set("targetPrice", v)}
+                placeholder="31.00"
+              />
             </div>
             <div>
               <Label>Expected upside</Label>
-              <div style={{
-                padding: "10px 12px", border: "1px solid #E0E0E0", borderRadius: 8,
-                fontSize: 14, background: "#F8F8F8", color: upside ? (parseFloat(upside) >= 0 ? "#27500A" : "#791F1F") : "#bbb",
-                fontWeight: upside ? 700 : 400,
-              }}>
-                {upside ? `${parseFloat(upside) >= 0 ? "+" : ""}${upside}%` : "Auto"}
+              <div
+                style={{
+                  padding: "10px 12px",
+                  border: "1px solid #E0E0E0",
+                  borderRadius: 8,
+                  fontSize: 14,
+                  background: "#F8F8F8",
+                  color: upside
+                    ? parseFloat(upside) >= 0
+                      ? "#27500A"
+                      : "#791F1F"
+                    : "#bbb",
+                  fontWeight: upside ? 700 : 400,
+                }}
+              >
+                {upside
+                  ? `${parseFloat(upside) >= 0 ? "+" : ""}${upside}%`
+                  : "Auto"}
               </div>
             </div>
             <div>
               <Label>Time horizon</Label>
-              <Input value={form.timeHorizon} onChange={(v) => set("timeHorizon", v)} placeholder="12–18 months" />
+              <Input
+                value={form.timeHorizon}
+                onChange={(v) => set("timeHorizon", v)}
+                placeholder="12–18 months"
+              />
             </div>
           </div>
           <div>
@@ -403,9 +826,16 @@ export default function CreatePostPage() {
                   type="button"
                   onClick={() => set("rating", r)}
                   style={{
-                    padding: "7px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                    cursor: "pointer", transition: "all 0.1s",
-                    border: form.rating === r ? `2px solid ${RATING_COLORS[r]}` : "2px solid #E0E0E0",
+                    padding: "7px 14px",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "all 0.1s",
+                    border:
+                      form.rating === r
+                        ? `2px solid ${RATING_COLORS[r]}`
+                        : "2px solid #E0E0E0",
                     background: form.rating === r ? RATING_COLORS[r] : "#fff",
                     color: form.rating === r ? "#fff" : "#666",
                   }}
@@ -428,7 +858,14 @@ export default function CreatePostPage() {
               rows={3}
             />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 18 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 20,
+              marginBottom: 18,
+            }}
+          >
             <div>
               <Label>Investment highlights</Label>
               <BulletListEditor
@@ -455,16 +892,34 @@ export default function CreatePostPage() {
               rows={10}
             />
             <p style={{ fontSize: 12, color: "#aaa", margin: "6px 0 0" }}>
-              Supports HTML tags: &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;strong&gt;, &lt;em&gt;, etc.
+              Supports HTML tags: &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;,
+              &lt;strong&gt;, &lt;em&gt;, etc.
             </p>
           </div>
         </SectionCard>
 
         {/* File uploads */}
         <SectionCard title="Files">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+          >
             <div>
               <Label>Presentation (.pptx)</Label>
+              {!form.pptxFile && form.existingPptxUrl && (
+                <p
+                  style={{ fontSize: 12, color: "#27500A", margin: "0 0 6px" }}
+                >
+                  Currently attached:{" "}
+                  <a
+                    href={form.existingPptxUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    view file
+                  </a>{" "}
+                  — upload a new one below to replace it.
+                </p>
+              )}
               <FileDropZone
                 label="Upload PPTX file"
                 accept=".pptx"
@@ -474,6 +929,21 @@ export default function CreatePostPage() {
             </div>
             <div>
               <Label>PDF report</Label>
+              {!form.pdfFile && form.existingPdfUrl && (
+                <p
+                  style={{ fontSize: 12, color: "#27500A", margin: "0 0 6px" }}
+                >
+                  Currently attached:{" "}
+                  <a
+                    href={form.existingPdfUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    view file
+                  </a>{" "}
+                  — upload a new one below to replace it.
+                </p>
+              )}
               <FileDropZone
                 label="Upload PDF file"
                 accept=".pdf"
@@ -485,39 +955,88 @@ export default function CreatePostPage() {
         </SectionCard>
 
         {/* Publish bar */}
-        <div style={{
-          position: "sticky", bottom: 0, background: "#fff",
-          border: "1px solid #E8E8E8", borderRadius: 12, padding: "16px 24px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          boxShadow: "0 -4px 20px rgba(0,0,0,0.06)",
-        }}>
+        <div
+          style={{
+            position: "sticky",
+            bottom: 0,
+            background: "#fff",
+            border: "1px solid #E8E8E8",
+            borderRadius: 12,
+            padding: "16px 24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            boxShadow: "0 -4px 20px rgba(0,0,0,0.06)",
+          }}
+        >
           <div style={{ fontSize: 13, color: "#888" }}>
-            {form.ticker && form.companyName
-              ? <><strong style={{ color: "#111" }}>{form.ticker}</strong> — {form.companyName}</>
-              : "Fill in ticker and company name to preview"}
+            {form.ticker && form.companyName ? (
+              <>
+                <strong style={{ color: "#111" }}>{form.ticker}</strong> —{" "}
+                {form.companyName}
+              </>
+            ) : (
+              "Fill in ticker and company name to preview"
+            )}
           </div>
           <div style={{ display: "flex", gap: 10 }}>
+            {isEditMode && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting || savingDraft || publishing}
+                style={{
+                  padding: "10px 20px",
+                  background: "#fff",
+                  border: "1px solid #F3C4C4",
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: deleting ? "not-allowed" : "pointer",
+                  color: "#791F1F",
+                }}
+              >
+                {deleting ? "Deleting..." : "Delete report"}
+              </button>
+            )}
             <button
               type="button"
+              onClick={handleSaveDraft}
+              disabled={savingDraft || publishing || deleting}
               style={{
-                padding: "10px 20px", background: "#fff", border: "1px solid #E0E0E0",
-                borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: "pointer", color: "#555",
+                padding: "10px 20px",
+                background: "#fff",
+                border: "1px solid #E0E0E0",
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: savingDraft || publishing ? "not-allowed" : "pointer",
+                color: "#555",
               }}
             >
-              Save draft
+              {savingDraft ? "Saving..." : "Save draft"}
             </button>
             <button
               type="submit"
-              disabled={publishing}
+              disabled={publishing || savingDraft || deleting}
               style={{
                 padding: "10px 24px",
                 background: publishing ? "#555" : "#0D1117",
-                color: "#fff", border: "none", borderRadius: 8,
-                fontSize: 14, fontWeight: 600,
-                cursor: publishing ? "not-allowed" : "pointer",
+                color: "#fff",
+                border: "none",
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: publishing || savingDraft ? "not-allowed" : "pointer",
               }}
             >
-              {publishing ? "Publishing..." : "Publish report →"}
+              {isEditMode
+                ? publishing
+                  ? "Saving..."
+                  : "Save changes →"
+                : publishing
+                  ? "Publishing..."
+                  : "Publish report →"}
             </button>
           </div>
         </div>

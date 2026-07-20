@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { isCurrentUserAdmin } from "../lib/reports"; // Adjust path as needed
 
 const navItems = [
   { label: "Research", to: "/research" },
   { label: "About", to: "/about" },
   { label: "Performance", to: "/performance" },
+];
+
+const adminNavItems = [
+  { label: "Admin Dashboard", to: "/admin" },
   { label: "Create Your Own Post", to: "/admin/new" },
 ];
 
@@ -13,28 +18,54 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const client = supabase;
 
     if (!client) {
       setIsAuthenticated(false);
+      setIsAdmin(false);
       return;
     }
+
+    const checkAdminStatus = async () => {
+      try {
+        const adminStatus = await isCurrentUserAdmin();
+        setIsAdmin(adminStatus);
+      } catch (err) {
+        setIsAdmin(false);
+      }
+    };
 
     const getSession = async () => {
       const {
         data: { session },
       } = await client.auth.getSession();
-      setIsAuthenticated(Boolean(session));
+
+      const loggedIn = Boolean(session);
+      setIsAuthenticated(loggedIn);
+
+      if (loggedIn) {
+        await checkAdminStatus();
+      } else {
+        setIsAdmin(false);
+      }
     };
 
     getSession();
 
     const {
       data: { subscription },
-    } = client.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(Boolean(session));
+    } = client.auth.onAuthStateChange(async (_event, session) => {
+      const loggedIn = Boolean(session);
+      setIsAuthenticated(loggedIn);
+
+      if (loggedIn) {
+        await checkAdminStatus();
+      } else {
+        setIsAdmin(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -43,6 +74,7 @@ export default function Layout() {
   const handleLogout = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
+    setIsAdmin(false);
     navigate("/login", { replace: true });
   };
 
@@ -100,6 +132,8 @@ export default function Layout() {
             Texas Valuation & Modeling
           </span>
         </Link>
+
+        {/* Render standard navigation items */}
         {navItems.map((item) => {
           const active =
             location.pathname === item.to ||
@@ -122,6 +156,34 @@ export default function Layout() {
             </Link>
           );
         })}
+
+        {/* Conditionally render admin navigation items if admin */}
+        {isAdmin &&
+          adminNavItems.map((item) => {
+            const active =
+              item.to === "/admin"
+                ? location.pathname === "/admin"
+                : location.pathname === item.to ||
+                  (item.to !== "/" && location.pathname.startsWith(item.to));
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                style={{
+                  color: active ? "#fff" : "#ccc",
+                  fontSize: 13,
+                  textDecoration: "none",
+                  fontWeight: 500,
+                  padding: "8px 10px",
+                  borderRadius: 6,
+                  background: active ? "rgba(255,255,255,0.08)" : "transparent",
+                }}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+
         <div
           style={{
             marginLeft: "auto",
@@ -203,12 +265,16 @@ export default function Layout() {
           >
             Performance
           </Link>
-          <Link
-            to="/admin/new"
-            style={{ color: "#777", fontSize: 12, textDecoration: "none" }}
-          >
-            Create Post
-          </Link>
+
+          {/* Conditionally render footer "Create Post" link if admin */}
+          {isAdmin && (
+            <Link
+              to="/admin/new"
+              style={{ color: "#777", fontSize: 12, textDecoration: "none" }}
+            >
+              Create Post
+            </Link>
+          )}
         </div>
         <p style={{ fontSize: 11, color: "#333", margin: 0, lineHeight: 1.6 }}>
           Research published for informational purposes only. Not investment

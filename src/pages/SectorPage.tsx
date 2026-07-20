@@ -1,17 +1,33 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  getReportsBySector,
   getSectorOverview,
   MOCK_POSITIONS,
+  type Report,
 } from "../data/mockData";
+import { getReportsBySector } from "../lib/reports";
 
 export default function SectorPage() {
   const { sector = "" } = useParams();
   const overview = getSectorOverview(sector);
-  const reports = getReportsBySector(sector);
   const positions = MOCK_POSITIONS.filter(
     (position) => position.sector.toLowerCase() === sector.toLowerCase(),
   );
+
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    getReportsBySector(sector)
+      .then(setReports)
+      .catch((err) =>
+        setError(err.message || "Failed to load reports for this sector."),
+      )
+      .finally(() => setLoading(false));
+  }, [sector]);
 
   return (
     <main
@@ -213,45 +229,89 @@ export default function SectorPage() {
         >
           Reports in this sector
         </h2>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: 14,
-          }}
-        >
-          {reports.map((report) => (
-            <Link
-              key={report.slug}
-              to={`/reports/${report.slug}`}
-              style={{
-                background: "#fff",
-                border: "1px solid #E8E8E8",
-                borderRadius: 12,
-                padding: 16,
-                textDecoration: "none",
-                color: "inherit",
-              }}
-            >
-              <div style={{ fontSize: 12, color: "#888", marginBottom: 6 }}>
-                {report.publishedAt}
-              </div>
-              <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>
-                {report.companyName}
-              </div>
-              <p
+
+        {error && (
+          <div
+            style={{
+              background: "#FDECEC",
+              border: "1px solid #F3C4C4",
+              borderRadius: 8,
+              padding: "12px 16px",
+              marginBottom: 16,
+              color: "#791F1F",
+              fontSize: 14,
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "40px 0",
+              color: "#999",
+              fontSize: 14,
+            }}
+          >
+            Loading reports…
+          </div>
+        ) : reports.length === 0 ? (
+          <div
+            style={{
+              background: "#fff",
+              border: "1px solid #E8E8E8",
+              borderRadius: 12,
+              padding: "24px 16px",
+              textAlign: "center",
+              color: "#999",
+              fontSize: 14,
+            }}
+          >
+            No published reports in this sector yet.
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 14,
+            }}
+          >
+            {reports.map((report) => (
+              <Link
+                key={report.slug}
+                to={`/reports/${report.slug}`}
                 style={{
-                  fontSize: 13,
-                  color: "#666",
-                  lineHeight: 1.7,
-                  margin: 0,
+                  background: "#fff",
+                  border: "1px solid #E8E8E8",
+                  borderRadius: 12,
+                  padding: 16,
+                  textDecoration: "none",
+                  color: "inherit",
                 }}
               >
-                {report.executiveSummary}
-              </p>
-            </Link>
-          ))}
-        </div>
+                <div style={{ fontSize: 12, color: "#888", marginBottom: 6 }}>
+                  {report.publishedAt}
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>
+                  {report.companyName}
+                </div>
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: "#666",
+                    lineHeight: 1.7,
+                    margin: 0,
+                  }}
+                >
+                  {report.executiveSummary}
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );

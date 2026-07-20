@@ -1,10 +1,12 @@
 import { Routes, Route } from "react-router-dom";
+import { RequireAdmin } from "./components/RequireAdmin";
 import HomePage from "./pages/Homepage";
 import LoginPage from "./pages/LoginPage";
 import ReportPage from "./pages/ReportPage";
 import CreatePostPage from "./pages/CreatePostPage";
 import AboutPage from "./pages/AboutPage";
 import ResearchArchivePage from "./pages/ResearchArchivePage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 import PositionPage from "./pages/PositionPage";
 import SectorPage from "./pages/SectorPage";
 import PerformancePage from "./pages/PerformancePage";
@@ -23,6 +25,31 @@ export default function App() {
         <Route path="/performance" element={<PerformancePage />} />
         <Route path="/reports/:slug" element={<ReportPage />} />
         <Route path="/admin/new" element={<CreatePostPage />} />
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <AdminDashboardPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="/edit-post/:slug"
+          element={
+            <RequireAdmin>
+              <CreatePostPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="/create-post"
+          element={
+            <RequireAdmin>
+              {" "}
+              <CreatePostPage />{" "}
+            </RequireAdmin>
+          }
+        />
       </Route>
       <Route path="/login" element={<LoginPage />} />
     </Routes>

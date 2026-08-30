@@ -362,16 +362,12 @@ export default function CreatePostPage() {
   useEffect(() => {
     if (!editSlug) return;
 
-<<<<<<< Updated upstream
-    setLoadingExisting(true);
-    getReportForEdit(editSlug)
-      .then((report) => {
-=======
     let ignore = false;
+    setLoadingExisting(true);
+
     getReportForEdit(editSlug)
       .then((report) => {
         if (ignore) return;
->>>>>>> Stashed changes
         setForm({
           ticker: report.ticker,
           companyName: report.companyName,
@@ -393,15 +389,10 @@ export default function CreatePostPage() {
           existingPdfUrl: report.pdfUrl ?? null,
         });
       })
-<<<<<<< Updated upstream
-      .catch((err) =>
-        setError(err.message || "Couldn't load that report for editing."),
-      )
-      .finally(() => setLoadingExisting(false));
-=======
       .catch((err: unknown) => {
         if (ignore) return;
-        const msg = err instanceof Error ? err.message : "Couldn't load that report for editing.";
+        const msg =
+          err instanceof Error ? err.message : "Couldn't load that report for editing.";
         setError(msg);
       })
       .finally(() => {
@@ -411,7 +402,6 @@ export default function CreatePostPage() {
     return () => {
       ignore = true;
     };
->>>>>>> Stashed changes
   }, [editSlug]);
 
   const set = <K extends keyof PostForm>(key: K, value: PostForm[K]) =>
@@ -421,14 +411,6 @@ export default function CreatePostPage() {
   const saveReport = async (status: "draft" | "published") => {
     setError(null);
 
-<<<<<<< Updated upstream
-    if (!form.ticker || !form.companyName || !form.sector || !form.analyst) {
-      setError("Ticker, company name, sector, and analyst are required.");
-      return;
-    }
-    if (!form.currentPrice || !form.targetPrice) {
-      setError("Current price and target price are required.");
-=======
     const tickerTrimmed = form.ticker.trim();
     const companyNameTrimmed = form.companyName.trim();
     const sectorTrimmed = form.sector.trim();
@@ -440,22 +422,24 @@ export default function CreatePostPage() {
       setError("Ticker, company name, sector, and analyst are required.");
       return;
     }
-    if (isNaN(curPriceNum) || curPriceNum < 0 || isNaN(tgtPriceNum) || tgtPriceNum < 0) {
-      setError("Current price and target price must be valid non-negative numbers.");
->>>>>>> Stashed changes
+    if (
+      isNaN(curPriceNum) ||
+      curPriceNum < 0 ||
+      isNaN(tgtPriceNum) ||
+      tgtPriceNum < 0
+    ) {
+      setError(
+        "Current price and target price must be valid non-negative numbers.",
+      );
       return;
     }
 
     const isPublish = status === "published";
-<<<<<<< Updated upstream
-    isPublish ? setPublishing(true) : setSavingDraft(true);
-=======
     if (isPublish) {
       setPublishing(true);
     } else {
       setSavingDraft(true);
     }
->>>>>>> Stashed changes
 
     try {
       // A new upload overrides the existing file; otherwise keep what's already saved.
@@ -467,18 +451,6 @@ export default function CreatePostPage() {
         : (form.existingPdfUrl ?? undefined);
 
       const payload = {
-<<<<<<< Updated upstream
-        ticker: form.ticker,
-        companyName: form.companyName,
-        sector: form.sector,
-        analyst: form.analyst,
-        rating: form.rating,
-        currentPrice: parseFloat(form.currentPrice),
-        targetPrice: parseFloat(form.targetPrice),
-        executiveSummary: form.executiveSummary,
-        featured: false,
-        timeHorizon: form.timeHorizon,
-=======
         ticker: tickerTrimmed,
         companyName: companyNameTrimmed,
         sector: sectorTrimmed,
@@ -489,7 +461,6 @@ export default function CreatePostPage() {
         executiveSummary: form.executiveSummary.trim(),
         featured: false,
         timeHorizon: form.timeHorizon.trim(),
->>>>>>> Stashed changes
         investmentHighlights: form.investmentHighlights.filter(
           (v) => v.trim() !== "",
         ),
@@ -510,21 +481,15 @@ export default function CreatePostPage() {
         setPublishedSlug(report.slug);
         setPublished(true);
       } else {
-        // Draft saved quietly — stay on the page so the analyst can keep editing.
         setError(null);
         alert("Draft saved.");
       }
-<<<<<<< Updated upstream
-    } catch (err: any) {
-      setError(
-        err.message || "Something went wrong while saving. Please try again.",
-      );
-=======
     } catch (err: unknown) {
       const msg =
-        err instanceof Error ? err.message : "Something went wrong while saving. Please try again.";
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while saving. Please try again.";
       setError(msg);
->>>>>>> Stashed changes
     } finally {
       setPublishing(false);
       setSavingDraft(false);
@@ -552,14 +517,9 @@ export default function CreatePostPage() {
     try {
       await deleteReport(editSlug);
       navigate("/admin");
-<<<<<<< Updated upstream
-    } catch (err: any) {
-      setError(err.message || "Couldn't delete this report.");
-=======
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Couldn't delete this report.";
       setError(msg);
->>>>>>> Stashed changes
       setDeleting(false);
     }
   };

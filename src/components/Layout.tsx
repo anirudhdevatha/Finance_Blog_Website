@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-<<<<<<< Updated upstream
-import { supabase } from "../lib/supabase";
-import { isCurrentUserAdmin } from "../lib/reports"; // Adjust path as needed
-=======
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import { isCurrentUserAdmin } from "../lib/reports";
 import { FinancialDisclaimer } from "./FinancialDisclaimer";
->>>>>>> Stashed changes
 
 const navItems = [
   { label: "Research", to: "/research" },
@@ -27,15 +22,7 @@ export default function Layout() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-<<<<<<< Updated upstream
-    const client = supabase;
-
-    if (!client) {
-      setIsAuthenticated(false);
-      setIsAdmin(false);
-=======
     if (!isSupabaseConfigured) {
->>>>>>> Stashed changes
       return;
     }
 
@@ -43,11 +30,7 @@ export default function Layout() {
       try {
         const adminStatus = await isCurrentUserAdmin();
         setIsAdmin(adminStatus);
-<<<<<<< Updated upstream
-      } catch (err) {
-=======
       } catch {
->>>>>>> Stashed changes
         setIsAdmin(false);
       }
     };
@@ -55,11 +38,7 @@ export default function Layout() {
     const getSession = async () => {
       const {
         data: { session },
-<<<<<<< Updated upstream
-      } = await client.auth.getSession();
-=======
       } = await supabase.auth.getSession();
->>>>>>> Stashed changes
 
       const loggedIn = Boolean(session);
       setIsAuthenticated(loggedIn);
@@ -75,11 +54,7 @@ export default function Layout() {
 
     const {
       data: { subscription },
-<<<<<<< Updated upstream
-    } = client.auth.onAuthStateChange(async (_event, session) => {
-=======
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
->>>>>>> Stashed changes
       const loggedIn = Boolean(session);
       setIsAuthenticated(loggedIn);
 
@@ -266,68 +241,35 @@ export default function Layout() {
             justifyContent: "center",
             gap: 16,
             flexWrap: "wrap",
-<<<<<<< Updated upstream
-            marginBottom: 10,
-=======
             marginBottom: 16,
->>>>>>> Stashed changes
           }}
         >
-          <Link
-            to="/research"
-            style={{ color: "#777", fontSize: 12, textDecoration: "none" }}
-          >
+          <Link to="/research" style={{ color: "#777", fontSize: 12, textDecoration: "none" }}>
             Research
           </Link>
-          <Link
-            to="/about"
-            style={{ color: "#777", fontSize: 12, textDecoration: "none" }}
-          >
+          <Link to="/about" style={{ color: "#777", fontSize: 12, textDecoration: "none" }}>
             About
           </Link>
-          <Link
-            to="/performance"
-            style={{ color: "#777", fontSize: 12, textDecoration: "none" }}
-          >
+          <Link to="/performance" style={{ color: "#777", fontSize: 12, textDecoration: "none" }}>
             Performance
           </Link>
-<<<<<<< Updated upstream
-=======
-          <Link
-            to="/privacy"
-            style={{ color: "#777", fontSize: 12, textDecoration: "none" }}
-          >
+          <Link to="/privacy" style={{ color: "#777", fontSize: 12, textDecoration: "none" }}>
             Privacy Policy
           </Link>
-          <Link
-            to="/terms"
-            style={{ color: "#777", fontSize: 12, textDecoration: "none" }}
-          >
+          <Link to="/terms" style={{ color: "#777", fontSize: 12, textDecoration: "none" }}>
             Terms of Service
           </Link>
->>>>>>> Stashed changes
 
-          {/* Conditionally render footer "Create Post" link if admin */}
           {isAdmin && (
-            <Link
-              to="/admin/new"
-              style={{ color: "#777", fontSize: 12, textDecoration: "none" }}
-            >
+            <Link to="/admin/new" style={{ color: "#777", fontSize: 12, textDecoration: "none" }}>
               Create Post
             </Link>
           )}
         </div>
-<<<<<<< Updated upstream
-        <p style={{ fontSize: 11, color: "#333", margin: 0, lineHeight: 1.6 }}>
-          Research published for informational purposes only. Not investment
-          advice. Past performance is not indicative of future results.
-        </p>
-=======
         <FinancialDisclaimer
           variant="compact"
           style={{ maxWidth: 720, margin: "0 auto", color: "#666" }}
         />
->>>>>>> Stashed changes
       </footer>
     </div>
   );

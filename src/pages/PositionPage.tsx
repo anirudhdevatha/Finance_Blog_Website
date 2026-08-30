@@ -4,10 +4,7 @@ import {
   MOCK_REPORTS,
   type Rating,
 } from "../data/mockData";
-<<<<<<< Updated upstream
-=======
 import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
->>>>>>> Stashed changes
 
 const RATING_STYLES: Record<
   Rating,
@@ -396,10 +393,7 @@ export default function PositionPage() {
           ))}
         </div>
       </section>
-<<<<<<< Updated upstream
-=======
       <FinancialDisclaimer variant="full" />
->>>>>>> Stashed changes
     </main>
   );
 }

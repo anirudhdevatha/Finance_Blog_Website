@@ -1,13 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
-<<<<<<< Updated upstream
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-=======
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? "";
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? "";
 
-// Security Safeguard: Ensure secret service_role key is NEVER exposed in the client
 if (supabaseAnonKey) {
   try {
     const parts = supabaseAnonKey.split(".");
@@ -20,28 +15,18 @@ if (supabaseAnonKey) {
         );
       }
     }
-  } catch (e) {
-    if (e instanceof Error && e.message.includes("[SECURITY CRITICAL]")) {
-      console.error(e.message);
-      throw e;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("[SECURITY CRITICAL]")) {
+      console.error(error.message);
+      throw error;
     }
   }
 }
->>>>>>> Stashed changes
 
 const normalizedSupabaseUrl = supabaseUrl
   ? supabaseUrl.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "")
   : "";
 
-<<<<<<< Updated upstream
-export const supabase = createClient(normalizedSupabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-});
-=======
 export const isSupabaseConfigured = Boolean(normalizedSupabaseUrl && supabaseAnonKey);
 
 export const supabase = isSupabaseConfigured
@@ -60,4 +45,3 @@ export const supabase = isSupabaseConfigured
         detectSessionInUrl: false,
       },
     });
->>>>>>> Stashed changes

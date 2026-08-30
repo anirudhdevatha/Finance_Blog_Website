@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
-<<<<<<< Updated upstream
-import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
-=======
 import { Link, useNavigate } from "react-router-dom";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
->>>>>>> Stashed changes
 
 type AuthMode = "login" | "signup";
 
@@ -15,15 +10,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-<<<<<<< Updated upstream
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    if (!supabase) {
-      setMessage(
-        "Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file.",
-      );
-=======
   const [message, setMessage] = useState(
     !isSupabaseConfigured
       ? "Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file."
@@ -32,7 +18,6 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
->>>>>>> Stashed changes
       return;
     }
 
@@ -49,13 +34,11 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabase) {
+    if (!isSupabaseConfigured) {
       setMessage("Supabase is not configured.");
       return;
     }
 
-<<<<<<< Updated upstream
-=======
     const cleanEmail = email.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!cleanEmail || !emailRegex.test(cleanEmail)) {
@@ -68,32 +51,23 @@ export default function LoginPage() {
       return;
     }
 
->>>>>>> Stashed changes
     setLoading(true);
     setMessage("");
 
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({
-<<<<<<< Updated upstream
-          email,
-=======
           email: cleanEmail,
->>>>>>> Stashed changes
           password,
         });
         if (error) throw error;
         setMessage("Signed in successfully.");
         navigate("/", { replace: true });
       } else {
-<<<<<<< Updated upstream
-        const { error } = await supabase.auth.signUp({ email, password });
-=======
         const { error } = await supabase.auth.signUp({
           email: cleanEmail,
           password,
         });
->>>>>>> Stashed changes
         if (error) throw error;
         setMessage("Account created. You’re being redirected to the homepage.");
         navigate("/", { replace: true });
@@ -385,8 +359,6 @@ export default function LoginPage() {
               </p>
             ) : null}
 
-<<<<<<< Updated upstream
-=======
             <p
               style={{
                 fontSize: 12,
@@ -406,7 +378,6 @@ export default function LoginPage() {
               </Link>.
             </p>
 
->>>>>>> Stashed changes
             <button
               type="submit"
               disabled={loading}

@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import type { PerformanceRecord } from "../data/mockData";
 import { getPerformanceRecords } from "../lib/performance";
-<<<<<<< Updated upstream
-=======
 import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
->>>>>>> Stashed changes
 
 export default function PerformancePage() {
   const [records, setRecords] = useState<PerformanceRecord[]>([]);
@@ -216,10 +213,7 @@ export default function PerformancePage() {
           </section>
         </>
       )}
-<<<<<<< Updated upstream
-=======
       <FinancialDisclaimer variant="full" />
->>>>>>> Stashed changes
     </main>
   );
 }

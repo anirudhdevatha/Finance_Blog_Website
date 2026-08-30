@@ -2,25 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Report, Rating } from "../data/mockData";
 import { getPublishedReports } from "../lib/reports";
-<<<<<<< Updated upstream
+import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
 
-const RATING_STYLES: Record<
-  Rating,
-  { bg: string; text: string; border: string }
-> = {
+const RATING_STYLES: Record<Rating, { bg: string; text: string; border: string }> = {
   "Strong Buy": { bg: "#EAF3DE", text: "#27500A", border: "#639922" },
   Buy: { bg: "#E1F5EE", text: "#085041", border: "#1D9E75" },
   Hold: { bg: "#FAEEDA", text: "#633806", border: "#BA7517" },
   Sell: { bg: "#FAECE7", text: "#712B13", border: "#D85A30" },
-=======
-import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
-
-const RATING_STYLES: Record<Rating, { bg: string; text: string; border: string }> = {
-  "Strong Buy":  { bg: "#EAF3DE", text: "#27500A", border: "#639922" },
-  "Buy":         { bg: "#E1F5EE", text: "#085041", border: "#1D9E75" },
-  "Hold":        { bg: "#FAEEDA", text: "#633806", border: "#BA7517" },
-  "Sell":        { bg: "#FAECE7", text: "#712B13", border: "#D85A30" },
->>>>>>> Stashed changes
   "Strong Sell": { bg: "#FCEBEB", text: "#791F1F", border: "#E24B4A" },
 };
 
@@ -458,7 +446,6 @@ export default function HomePage() {
             </div>
           )}
 
-<<<<<<< Updated upstream
           {!loading && !error && (
             <>
               {/* Featured reports */}
@@ -491,8 +478,7 @@ export default function HomePage() {
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fit, minmax(320px, 1fr))",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
                       gap: 16,
                     }}
                   >
@@ -502,96 +488,6 @@ export default function HomePage() {
                   </div>
                 </section>
               )}
-=======
-        {/* All research */}
-        <section>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 12 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: "#111", margin: 0, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              All research
-            </h2>
-
-            {/* Filters */}
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search ticker or company..."
-                style={{
-                  padding: "7px 12px", border: "1px solid #E0E0E0", borderRadius: 8,
-                  fontSize: 13, color: "#111", background: "#fff", outline: "none",
-                  width: 200, fontFamily: "inherit",
-                }}
-              />
-              <select
-                value={sector}
-                onChange={(e) => setSector(e.target.value)}
-                style={{
-                  padding: "7px 12px", border: "1px solid #E0E0E0", borderRadius: 8,
-                  fontSize: 13, color: "#555", background: "#fff", outline: "none", fontFamily: "inherit",
-                }}
-              >
-                {ALL_SECTORS.map((s) => <option key={s}>{s}</option>)}
-              </select>
-              <select
-                value={ratingFilter}
-                onChange={(e) => setRatingFilter(e.target.value as "All" | Rating)}
-                style={{
-                  padding: "7px 12px", border: "1px solid #E0E0E0", borderRadius: 8,
-                  fontSize: 13, color: "#555", background: "#fff", outline: "none", fontFamily: "inherit",
-                }}
-              >
-                {ALL_RATINGS.map((r) => <option key={r}>{r}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {/* Table header */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "100px 1fr 120px 90px 90px 90px",
-            gap: 16, padding: "10px 20px",
-            background: "#F0F0EE", borderRadius: "10px 10px 0 0",
-            border: "1px solid #E8E8E8",
-          }}>
-            {["Ticker", "Company", "Rating", "Price", "Target", "Upside"].map((h) => (
-              <span key={h} style={{ fontSize: 11, fontWeight: 600, color: "#999", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                {h}
-              </span>
-            ))}
-          </div>
-
-                {/* Rows */}
-                <div
-                  style={{
-                    background: "#fff",
-                    border: "1px solid #E8E8E8",
-                    borderTop: "none",
-                    borderRadius: "0 0 10px 10px",
-                    overflow: "hidden",
-                  }}
-                >
-                  {filtered.length > 0 ? (
-                    filtered.map((r) => <ReportRow key={r.slug} report={r} />)
-                  ) : (
-                    <div
-                      style={{
-                        padding: "40px 20px",
-                        textAlign: "center",
-                        color: "#aaa",
-                        fontSize: 14,
-                      }}
-                    >
-                      No reports match your filters.
-                    </div>
-                  )}
-                </div>
-              </section>
-            </>
-          )}
-          <FinancialDisclaimer variant="full" />
-        </div>
-      </div>
->>>>>>> Stashed changes
 
               {/* All research */}
               <section>
@@ -657,9 +553,7 @@ export default function HomePage() {
                         fontFamily: "inherit",
                       }}
                     >
-                      {allSectors.map((s) => (
-                        <option key={s}>{s}</option>
-                      ))}
+                      {allSectors.map((s) => <option key={s}>{s}</option>)}
                     </select>
                     <select
                       value={ratingFilter}
@@ -677,14 +571,11 @@ export default function HomePage() {
                         fontFamily: "inherit",
                       }}
                     >
-                      {ALL_RATINGS.map((r) => (
-                        <option key={r}>{r}</option>
-                      ))}
+                      {ALL_RATINGS.map((r) => <option key={r}>{r}</option>)}
                     </select>
                   </div>
                 </div>
 
-                {/* Table header */}
                 <div
                   style={{
                     display: "grid",
@@ -696,30 +587,24 @@ export default function HomePage() {
                     border: "1px solid #E8E8E8",
                   }}
                 >
-                  {[
-                    "Ticker",
-                    "Company",
-                    "Rating",
-                    "Price",
-                    "Target",
-                    "Upside",
-                  ].map((h) => (
-                    <span
-                      key={h}
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: "#999",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                      }}
-                    >
-                      {h}
-                    </span>
-                  ))}
+                  {["Ticker", "Company", "Rating", "Price", "Target", "Upside"].map(
+                    (h) => (
+                      <span
+                        key={h}
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: "#999",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                        }}
+                      >
+                        {h}
+                      </span>
+                    ),
+                  )}
                 </div>
 
-                {/* Rows */}
                 <div
                   style={{
                     background: "#fff",
@@ -747,6 +632,7 @@ export default function HomePage() {
               </section>
             </>
           )}
+          <FinancialDisclaimer variant="full" />
         </div>
       </div>
     </div>

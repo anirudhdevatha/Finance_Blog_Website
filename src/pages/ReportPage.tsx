@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { Rating, Report } from "../data/mockData";
 import { getReportBySlug } from "../lib/reports";
+<<<<<<< Updated upstream
+=======
+import { sanitizeHtml } from "../lib/sanitize";
+import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
+>>>>>>> Stashed changes
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -277,12 +282,33 @@ export default function ReportPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+<<<<<<< Updated upstream
     setLoading(true);
     setError(null);
     getReportBySlug(slug)
       .then(setReport)
       .catch(() => setError("We couldn't find that report."))
       .finally(() => setLoading(false));
+=======
+    let ignore = false;
+    getReportBySlug(slug)
+      .then((data) => {
+        if (ignore) return;
+        setReport(data);
+        setError(null);
+      })
+      .catch(() => {
+        if (ignore) return;
+        setError("We couldn't find that report.");
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+>>>>>>> Stashed changes
   }, [slug]);
 
   if (loading) {
@@ -572,7 +598,11 @@ export default function ReportPage() {
           color: "#222",
           marginBottom: 56,
         }}
+<<<<<<< Updated upstream
         dangerouslySetInnerHTML={{ __html: report.body }}
+=======
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(report.body) }}
+>>>>>>> Stashed changes
       />
 
       <section>
@@ -621,6 +651,7 @@ export default function ReportPage() {
         </div>
       </section>
 
+<<<<<<< Updated upstream
       <div
         style={{
           marginTop: 56,
@@ -637,6 +668,9 @@ export default function ReportPage() {
         Past performance is not indicative of future results. Please see our
         full disclosures page before acting on any information contained herein.
       </div>
+=======
+      <FinancialDisclaimer variant="full" />
+>>>>>>> Stashed changes
     </main>
   );
 }

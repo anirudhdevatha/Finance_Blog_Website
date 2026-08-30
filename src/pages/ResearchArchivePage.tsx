@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Report, Rating } from "../data/mockData";
 import { getPublishedReports } from "../lib/reports";
+<<<<<<< Updated upstream
+=======
+import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
+>>>>>>> Stashed changes
 
 const ALL_RATINGS: ("All" | Rating)[] = [
   "All",
@@ -583,6 +587,10 @@ export default function ResearchArchivePage() {
           </div>
         </>
       )}
+<<<<<<< Updated upstream
+=======
+      <FinancialDisclaimer variant="full" />
+>>>>>>> Stashed changes
     </main>
   );
 }

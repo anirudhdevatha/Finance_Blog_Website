@@ -6,6 +6,10 @@ import {
   type Report,
 } from "../data/mockData";
 import { getReportsBySector } from "../lib/reports";
+<<<<<<< Updated upstream
+=======
+import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
+>>>>>>> Stashed changes
 
 export default function SectorPage() {
   const { sector = "" } = useParams();
@@ -19,6 +23,7 @@ export default function SectorPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+<<<<<<< Updated upstream
     setLoading(true);
     setError(null);
     getReportsBySector(sector)
@@ -27,6 +32,27 @@ export default function SectorPage() {
         setError(err.message || "Failed to load reports for this sector."),
       )
       .finally(() => setLoading(false));
+=======
+    let ignore = false;
+    getReportsBySector(sector)
+      .then((data) => {
+        if (ignore) return;
+        setReports(data);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (ignore) return;
+        const msg = err instanceof Error ? err.message : "Failed to load reports for this sector.";
+        setError(msg);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+>>>>>>> Stashed changes
   }, [sector]);
 
   return (
@@ -313,6 +339,10 @@ export default function SectorPage() {
           </div>
         )}
       </section>
+<<<<<<< Updated upstream
+=======
+      <FinancialDisclaimer variant="full" />
+>>>>>>> Stashed changes
     </main>
   );
 }

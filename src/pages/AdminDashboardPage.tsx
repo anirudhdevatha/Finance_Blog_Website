@@ -22,7 +22,29 @@ export default function AdminDashboardPage() {
   const [filter, setFilter] = useState<"all" | "published" | "draft">("all");
 
   useEffect(() => {
+<<<<<<< Updated upstream
     load();
+=======
+    let ignore = false;
+    getAdminReports()
+      .then((data) => {
+        if (ignore) return;
+        setReports(data);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (ignore) return;
+        const msg = err instanceof Error ? err.message : "Failed to load reports.";
+        setError(msg);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+>>>>>>> Stashed changes
   }, []);
 
   const visibleReports = useMemo(
@@ -31,6 +53,7 @@ export default function AdminDashboardPage() {
     [reports, filter],
   );
 
+<<<<<<< Updated upstream
   async function load() {
     setLoading(true);
     setError(null);
@@ -44,6 +67,8 @@ export default function AdminDashboardPage() {
     }
   }
 
+=======
+>>>>>>> Stashed changes
   async function handleDelete(slug: string, companyName: string) {
     const confirmed = window.confirm(
       `Delete "${companyName}"? This can't be undone.`,
@@ -54,8 +79,14 @@ export default function AdminDashboardPage() {
     try {
       await deleteReport(slug);
       setReports((prev) => prev.filter((r) => r.slug !== slug));
+<<<<<<< Updated upstream
     } catch (err: any) {
       setError(err.message || "Couldn't delete this report.");
+=======
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Couldn't delete this report.";
+      setError(msg);
+>>>>>>> Stashed changes
     } finally {
       setDeletingSlug(null);
     }

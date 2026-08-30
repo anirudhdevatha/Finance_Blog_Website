@@ -1,5 +1,9 @@
 import { Link } from "react-router-dom";
 import { MOCK_TEAM } from "../data/mockData";
+<<<<<<< Updated upstream
+=======
+import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
+>>>>>>> Stashed changes
 
 const values = [
   {
@@ -290,6 +294,10 @@ export default function AboutPage() {
           View our research
         </Link>
       </div>
+<<<<<<< Updated upstream
+=======
+      <FinancialDisclaimer variant="full" />
+>>>>>>> Stashed changes
     </main>
   );
 }

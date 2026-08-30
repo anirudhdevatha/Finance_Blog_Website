@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
+<<<<<<< Updated upstream
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+=======
+import { Link, useNavigate } from "react-router-dom";
+import { supabase, isSupabaseConfigured } from "../lib/supabase";
+>>>>>>> Stashed changes
 
 type AuthMode = "login" | "signup";
 
@@ -10,6 +15,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+<<<<<<< Updated upstream
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -17,6 +23,16 @@ export default function LoginPage() {
       setMessage(
         "Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file.",
       );
+=======
+  const [message, setMessage] = useState(
+    !isSupabaseConfigured
+      ? "Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file."
+      : ""
+  );
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+>>>>>>> Stashed changes
       return;
     }
 
@@ -38,20 +54,46 @@ export default function LoginPage() {
       return;
     }
 
+<<<<<<< Updated upstream
+=======
+    const cleanEmail = email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      setMessage("Please provide a valid email address.");
+      return;
+    }
+
+    if (mode === "signup" && password.length < 8) {
+      setMessage("Password must be at least 8 characters long.");
+      return;
+    }
+
+>>>>>>> Stashed changes
     setLoading(true);
     setMessage("");
 
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({
+<<<<<<< Updated upstream
           email,
+=======
+          email: cleanEmail,
+>>>>>>> Stashed changes
           password,
         });
         if (error) throw error;
         setMessage("Signed in successfully.");
         navigate("/", { replace: true });
       } else {
+<<<<<<< Updated upstream
         const { error } = await supabase.auth.signUp({ email, password });
+=======
+        const { error } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+        });
+>>>>>>> Stashed changes
         if (error) throw error;
         setMessage("Account created. You’re being redirected to the homepage.");
         navigate("/", { replace: true });
@@ -343,6 +385,28 @@ export default function LoginPage() {
               </p>
             ) : null}
 
+<<<<<<< Updated upstream
+=======
+            <p
+              style={{
+                fontSize: 12,
+                color: "#666",
+                lineHeight: 1.5,
+                margin: "4px 0 10px",
+                textAlign: "center",
+              }}
+            >
+              By continuing, you agree to TVM's{" "}
+              <Link to="/terms" style={{ color: "#185FA5", textDecoration: "underline" }}>
+                Terms of Service
+              </Link>{" "}
+              and acknowledge our{" "}
+              <Link to="/privacy" style={{ color: "#185FA5", textDecoration: "underline" }}>
+                Privacy Policy
+              </Link>.
+            </p>
+
+>>>>>>> Stashed changes
             <button
               type="submit"
               disabled={loading}

@@ -685,7 +685,7 @@ export default function CreatePostPage() {
 
       <form
         onSubmit={handlePublish}
-        style={{ maxWidth: 760, margin: "0 auto", padding: "40px 24px 100px" }}
+        style={{ maxWidth: 760, margin: "0 auto", padding: "40px 24px" }}
       >
         <div style={{ marginBottom: 28 }}>
           <h1

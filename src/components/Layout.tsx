@@ -81,6 +81,8 @@ export default function Layout() {
         minHeight: "100vh",
         background: "#F7F7F5",
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <nav
@@ -222,7 +224,20 @@ export default function Layout() {
         </div>
       </nav>
 
-      <Outlet />
+      <div style={{ flex: 1 }}>
+        <Outlet />
+      </div>
+
+      <div
+        style={{
+          maxWidth: 1148,
+          width: "100%",
+          margin: "0 auto",
+          padding: "0 24px 32px",
+        }}
+      >
+        <FinancialDisclaimer variant="full" />
+      </div>
 
       <footer
         style={{
@@ -266,10 +281,6 @@ export default function Layout() {
             </Link>
           )}
         </div>
-        <FinancialDisclaimer
-          variant="compact"
-          style={{ maxWidth: 720, margin: "0 auto", color: "#666" }}
-        />
       </footer>
     </div>
   );

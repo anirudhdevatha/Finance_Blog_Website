@@ -27,7 +27,7 @@ export function FinancialDisclaimer({
   return (
     <div
       style={{
-        marginTop: 56,
+        marginTop: 0,
         padding: "16px 20px",
         background: "#F5F5F5",
         borderRadius: 8,

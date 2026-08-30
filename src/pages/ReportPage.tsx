@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import type { Rating, Report } from "../data/mockData";
 import { getReportBySlug } from "../lib/reports";
 import { sanitizeHtml } from "../lib/sanitize";
-import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -357,7 +356,7 @@ export default function ReportPage() {
       style={{
         maxWidth: 820,
         margin: "0 auto",
-        padding: "48px 24px 96px",
+        padding: "48px 24px",
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
         color: "#111",
         lineHeight: 1.65,
@@ -638,7 +637,6 @@ export default function ReportPage() {
         </div>
       </section>
 
-      <FinancialDisclaimer variant="full" />
     </main>
   );
 }

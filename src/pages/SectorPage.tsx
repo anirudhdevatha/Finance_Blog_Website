@@ -6,7 +6,6 @@ import {
   type Report,
 } from "../data/mockData";
 import { getReportsBySector } from "../lib/reports";
-import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
 
 export default function SectorPage() {
   const { sector = "" } = useParams();
@@ -50,7 +49,7 @@ export default function SectorPage() {
       style={{
         maxWidth: 1100,
         margin: "0 auto",
-        padding: "48px 24px 96px",
+        padding: "48px 24px",
         color: "#111",
       }}
     >
@@ -329,7 +328,6 @@ export default function SectorPage() {
           </div>
         )}
       </section>
-      <FinancialDisclaimer variant="full" />
     </main>
   );
 }

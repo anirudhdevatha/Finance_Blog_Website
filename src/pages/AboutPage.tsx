@@ -1,19 +1,21 @@
 import { Link } from "react-router-dom";
-import { MOCK_TEAM } from "../data/mockData";
-import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
 
-const values = [
+const sections = [
   {
-    title: "Conviction-based",
-    text: "We publish high-conviction ideas with clear positioning and valuation discipline.",
+    title: "What we do",
+    text: "We publish equity research pitches using DCF, SOTP, and NAV, plus market watches on current events and catalysts.",
   },
   {
-    title: "Long-term focus",
-    text: "Our work emphasizes durable business quality over short-term noise.",
+    title: "How a pitch gets built",
+    text: "Research, modeling, then peer review before anything goes out. We’ve also gotten informal feedback from industry professionals along the way.",
   },
   {
-    title: "Transparent process",
-    text: "We explain the assumptions behind each view and what could change the thesis.",
+    title: "Where we’re headed",
+    text: "As TVM grows, we want to help train the next wave of students trying to break into finance.",
+  },
+  {
+    title: "Status",
+    text: "An independent, student-founded organization.",
   },
 ];
 
@@ -23,7 +25,7 @@ export default function AboutPage() {
       style={{
         maxWidth: 1100,
         margin: "0 auto",
-        padding: "52px 24px 96px",
+        padding: "52px 24px 48px",
         color: "#111",
       }}
     >
@@ -48,7 +50,7 @@ export default function AboutPage() {
             letterSpacing: "-0.02em",
           }}
         >
-          Long-term research built for disciplined investors.
+          Texas Valuation &amp; Modeling
         </h1>
         <p
           style={{
@@ -56,204 +58,73 @@ export default function AboutPage() {
             lineHeight: 1.7,
             color: "#555",
             maxWidth: 760,
+            margin: 0,
           }}
         >
-          Texas Valuation & Modeling is a research-focused firm dedicated to
-          publishing thoughtful, conviction-driven ideas across public markets.
-          Our work blends fundamental analysis, scenario planning, and valuation
-          discipline to help investors understand both the upside and the risks
-          behind each thesis.
+          Student-led research for investors and future finance professionals.
         </p>
       </section>
 
       <section
         style={{
           display: "grid",
-          gridTemplateColumns: "1.2fr 0.8fr",
-          gap: 20,
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: 16,
           marginBottom: 40,
         }}
       >
+        {sections.map((section) => (
+          <article
+            key={section.title}
+            style={{
+              background: "#fff",
+              border: "1px solid #E8E8E8",
+              borderRadius: 14,
+              padding: "24px 26px",
+            }}
+          >
+            <h2
+              style={{
+                fontSize: 16,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                margin: "0 0 10px",
+              }}
+            >
+              {section.title}
+            </h2>
+            <p style={{ fontSize: 15, lineHeight: 1.75, color: "#555", margin: 0 }}>
+              {section.text}
+            </p>
+          </article>
+        ))}
+      </section>
+
+      <section style={{ marginBottom: 40 }}>
+        <h2
+          style={{
+            fontSize: 16,
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+            margin: "0 0 14px",
+          }}
+        >
+          Team
+        </h2>
         <div
           style={{
             background: "#fff",
             border: "1px solid #E8E8E8",
             borderRadius: 14,
-            padding: "28px 30px",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: 16,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              marginBottom: 12,
-            }}
-          >
-            Who we are
-          </h2>
-          <p
-            style={{ fontSize: 15, lineHeight: 1.75, color: "#444", margin: 0 }}
-          >
-            We believe strong investing starts with understanding the business,
-            the market structure, and the management team. Our research
-            philosophy is grounded in long-term thinking, rigorous valuation,
-            and transparent communication rather than short-term market noise.
-          </p>
-        </div>
-        <div
-          style={{
-            background: "#0D1117",
-            color: "#fff",
-            borderRadius: 14,
-            padding: "28px 30px",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: 16,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              marginBottom: 12,
-            }}
-          >
-            What we focus on
-          </h2>
-          <ul
-            style={{
-              margin: 0,
-              paddingLeft: 18,
-              color: "#ccc",
-              lineHeight: 1.8,
-            }}
-          >
-            <li>High-conviction public market ideas</li>
-            <li>Long-duration business quality analysis</li>
-            <li>Valuation and catalyst-driven frameworks</li>
-            <li>Clear risk-reward communication</li>
-          </ul>
-        </div>
-      </section>
-
-      <section style={{ marginBottom: 40 }}>
-        <h2
-          style={{
+            padding: "22px 24px",
             fontSize: 16,
-            fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-            marginBottom: 20,
+            fontWeight: 600,
+            color: "#333",
           }}
         >
-          Our team
-        </h2>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: 16,
-          }}
-        >
-          {MOCK_TEAM.map((member) => (
-            <div
-              key={member.name}
-              style={{
-                background: "#fff",
-                border: "1px solid #E8E8E8",
-                borderRadius: 14,
-                padding: 20,
-              }}
-            >
-              <img
-                src={member.photo}
-                alt={member.name}
-                style={{
-                  width: "100%",
-                  aspectRatio: "1 / 1",
-                  objectFit: "cover",
-                  borderRadius: 12,
-                  marginBottom: 14,
-                }}
-              />
-              <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 6px" }}>
-                {member.name}
-              </h3>
-              <p
-                style={{
-                  fontSize: 13,
-                  color: "#185FA5",
-                  fontWeight: 600,
-                  margin: "0 0 8px",
-                }}
-              >
-                {member.title}
-              </p>
-              <p style={{ fontSize: 13, color: "#777", margin: "0 0 8px" }}>
-                {member.sectorFocus}
-              </p>
-              <p
-                style={{
-                  fontSize: 14,
-                  lineHeight: 1.7,
-                  color: "#555",
-                  margin: 0,
-                }}
-              >
-                {member.bio}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <FinancialDisclaimer variant="full" />
-
-      <section style={{ marginBottom: 40 }}>
-        <h2
-          style={{
-            fontSize: 16,
-            fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-            marginBottom: 20,
-          }}
-        >
-          Why investors read us
-        </h2>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 16,
-          }}
-        >
-          {values.map((value) => (
-            <div
-              key={value.title}
-              style={{
-                background: "#fff",
-                border: "1px solid #E8E8E8",
-                borderRadius: 14,
-                padding: 22,
-              }}
-            >
-              <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 8px" }}>
-                {value.title}
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 14,
-                  color: "#555",
-                  lineHeight: 1.7,
-                }}
-              >
-                {value.text}
-              </p>
-            </div>
-          ))}
+          First Name, Last Name —
         </div>
       </section>
 
@@ -275,8 +146,7 @@ export default function AboutPage() {
             See the work behind the thesis.
           </h3>
           <p style={{ margin: 0, color: "#3B6D11" }}>
-            Explore our latest ideas and track the thinking behind each
-            recommendation.
+            Explore our latest ideas and track the thinking behind each recommendation.
           </p>
         </div>
         <Link
@@ -293,7 +163,6 @@ export default function AboutPage() {
           View our research
         </Link>
       </div>
-      <FinancialDisclaimer variant="full" />
     </main>
   );
 }

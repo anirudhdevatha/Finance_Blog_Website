@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { PerformanceRecord } from "../data/mockData";
 import { getPerformanceRecords } from "../lib/performance";
-import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
 
 export default function PerformancePage() {
   const [records, setRecords] = useState<PerformanceRecord[]>([]);
@@ -27,7 +26,7 @@ export default function PerformancePage() {
       style={{
         maxWidth: 1180,
         margin: "0 auto",
-        padding: "48px 24px 96px",
+        padding: "48px 24px",
         color: "#111",
       }}
     >
@@ -213,7 +212,6 @@ export default function PerformancePage() {
           </section>
         </>
       )}
-      <FinancialDisclaimer variant="full" />
     </main>
   );
 }

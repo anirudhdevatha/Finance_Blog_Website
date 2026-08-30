@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Report, Rating } from "../data/mockData";
 import { getPublishedReports } from "../lib/reports";
-import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
 
 const RATING_STYLES: Record<Rating, { bg: string; text: string; border: string }> = {
   "Strong Buy": { bg: "#EAF3DE", text: "#27500A", border: "#639922" },
@@ -414,7 +413,7 @@ export default function HomePage() {
           style={{
             maxWidth: 1100,
             margin: "0 auto",
-            padding: "48px 40px 96px",
+            padding: "48px 40px",
           }}
         >
           {loading && (
@@ -632,7 +631,6 @@ export default function HomePage() {
               </section>
             </>
           )}
-          <FinancialDisclaimer variant="full" />
         </div>
       </div>
     </div>

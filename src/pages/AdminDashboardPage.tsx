@@ -106,7 +106,7 @@ export default function AdminDashboardPage() {
       </div>
 
       <div
-        style={{ maxWidth: 980, margin: "0 auto", padding: "40px 24px 100px" }}
+        style={{ maxWidth: 980, margin: "0 auto", padding: "40px 24px" }}
       >
         <div
           style={{

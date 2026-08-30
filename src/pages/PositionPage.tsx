@@ -4,7 +4,6 @@ import {
   MOCK_REPORTS,
   type Rating,
 } from "../data/mockData";
-import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
 
 const RATING_STYLES: Record<
   Rating,
@@ -48,7 +47,7 @@ export default function PositionPage() {
         style={{
           maxWidth: 920,
           margin: "0 auto",
-          padding: "60px 24px 96px",
+          padding: "60px 24px 48px",
           color: "#111",
         }}
       >
@@ -75,7 +74,7 @@ export default function PositionPage() {
       style={{
         maxWidth: 1100,
         margin: "0 auto",
-        padding: "48px 24px 96px",
+        padding: "48px 24px",
         color: "#111",
       }}
     >
@@ -393,7 +392,6 @@ export default function PositionPage() {
           ))}
         </div>
       </section>
-      <FinancialDisclaimer variant="full" />
     </main>
   );
 }

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Report, Rating } from "../data/mockData";
 import { getPublishedReports } from "../lib/reports";
-import { FinancialDisclaimer } from "../components/FinancialDisclaimer";
 
 const ALL_RATINGS: ("All" | Rating)[] = [
   "All",
@@ -86,7 +85,7 @@ export default function ResearchArchivePage() {
       style={{
         maxWidth: 1180,
         margin: "0 auto",
-        padding: "48px 24px 180px",
+        padding: "48px 24px",
         color: "#111",
       }}
     >
@@ -584,7 +583,6 @@ export default function ResearchArchivePage() {
           </div>
         </>
       )}
-      <FinancialDisclaimer variant="full" />
     </main>
   );
 }

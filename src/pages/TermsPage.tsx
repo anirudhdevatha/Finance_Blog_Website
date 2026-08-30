@@ -4,7 +4,7 @@ export default function TermsPage() {
       style={{
         maxWidth: 900,
         margin: "0 auto",
-        padding: "48px 24px 120px",
+        padding: "48px 24px",
         color: "#111",
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
       }}

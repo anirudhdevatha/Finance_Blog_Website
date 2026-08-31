@@ -15,6 +15,8 @@ const securityHeaders = {
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https: blob:",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.supabase.in",
+    // Report pages embed uploaded PDFs served from Supabase storage.
+    "frame-src 'self' https://*.supabase.co https://*.supabase.in",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

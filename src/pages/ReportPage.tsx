@@ -215,56 +215,78 @@ function SlideViewer({
         ))}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          padding: "10px 14px",
-          background: "#111",
-          borderTop: "0.5px solid #222",
-        }}
-      >
-        {pptxUrl && (
-          <a
-            href={pptxUrl}
-            download
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 13,
-              color: "#ccc",
-              textDecoration: "none",
-              border: "0.5px solid #333",
-              borderRadius: 6,
-              padding: "5px 12px",
-              background: "#1a1a1a",
-            }}
-          >
-            ↓ Download PPTX
-          </a>
-        )}
-        {pdfUrl && (
-          <a
-            href={pdfUrl}
-            download
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 13,
-              color: "#ccc",
-              textDecoration: "none",
-              border: "0.5px solid #333",
-              borderRadius: 6,
-              padding: "5px 12px",
-              background: "#1a1a1a",
-            }}
-          >
-            ↓ Download PDF
-          </a>
-        )}
-      </div>
+      <DownloadBar pptxUrl={pptxUrl} pdfUrl={pdfUrl} />
+    </div>
+  );
+}
+
+function DownloadBar({ pptxUrl, pdfUrl }: { pptxUrl?: string; pdfUrl?: string }) {
+  const linkStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    fontSize: 13,
+    color: "#ccc",
+    textDecoration: "none",
+    border: "0.5px solid #333",
+    borderRadius: 6,
+    padding: "5px 12px",
+    background: "#1a1a1a",
+  };
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: 10,
+        padding: "10px 14px",
+        background: "#111",
+        borderTop: "0.5px solid #222",
+      }}
+    >
+      {pptxUrl && (
+        <a href={pptxUrl} download target="_blank" rel="noopener noreferrer" style={linkStyle}>
+          ↓ Download PPTX
+        </a>
+      )}
+      {pdfUrl && (
+        <a href={pdfUrl} download target="_blank" rel="noopener noreferrer" style={linkStyle}>
+          ↓ Download PDF
+        </a>
+      )}
+    </div>
+  );
+}
+
+function AttachmentViewer({ pptxUrl, pdfUrl }: { pptxUrl?: string; pdfUrl?: string }) {
+  return (
+    <div
+      style={{
+        border: "0.5px solid #E0E0E0",
+        borderRadius: 12,
+        overflow: "hidden",
+        background: "#0d0d0d",
+      }}
+    >
+      {pdfUrl ? (
+        <iframe
+          src={`${pdfUrl}#view=FitH`}
+          title="Report PDF"
+          style={{ display: "block", width: "100%", height: 720, border: "none" }}
+        />
+      ) : (
+        <div
+          style={{
+            padding: "36px 20px",
+            textAlign: "center",
+            color: "#888",
+            fontSize: 14,
+          }}
+        >
+          A presentation deck is attached to this report. Download it below to view the slides.
+        </div>
+      )}
+      <DownloadBar pptxUrl={pptxUrl} pdfUrl={pdfUrl} />
     </div>
   );
 }
@@ -350,6 +372,7 @@ export default function ReportPage() {
     100
   ).toFixed(1);
   const isPositive = report.targetPrice >= report.currentPrice;
+  const hasSlides = Boolean(report.slideThumbnails?.length);
 
   return (
     <main
@@ -561,7 +584,7 @@ export default function ReportPage() {
         </div>
       </section>
 
-      {report.slideThumbnails && report.slideThumbnails.length > 0 && (
+      {(hasSlides || report.pptxUrl || report.pdfUrl) && (
         <section style={{ marginBottom: 48 }}>
           <h2
             style={{
@@ -571,13 +594,17 @@ export default function ReportPage() {
               color: "#111",
             }}
           >
-            Presentation deck
+            {hasSlides || report.pptxUrl ? "Presentation deck" : "Full report"}
           </h2>
-          <SlideViewer
-            thumbnails={report.slideThumbnails}
-            pptxUrl={report.pptxUrl}
-            pdfUrl={report.pdfUrl}
-          />
+          {hasSlides ? (
+            <SlideViewer
+              thumbnails={report.slideThumbnails ?? []}
+              pptxUrl={report.pptxUrl}
+              pdfUrl={report.pdfUrl}
+            />
+          ) : (
+            <AttachmentViewer pptxUrl={report.pptxUrl} pdfUrl={report.pdfUrl} />
+          )}
         </section>
       )}
 

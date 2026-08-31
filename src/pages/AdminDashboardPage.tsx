@@ -22,7 +22,25 @@ export default function AdminDashboardPage() {
   const [filter, setFilter] = useState<"all" | "published" | "draft">("all");
 
   useEffect(() => {
-    load();
+    let ignore = false;
+    getAdminReports()
+      .then((data) => {
+        if (ignore) return;
+        setReports(data);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (ignore) return;
+        const msg = err instanceof Error ? err.message : "Failed to load reports.";
+        setError(msg);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const visibleReports = useMemo(
@@ -30,19 +48,6 @@ export default function AdminDashboardPage() {
       filter === "all" ? reports : reports.filter((r) => r.status === filter),
     [reports, filter],
   );
-
-  async function load() {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getAdminReports();
-      setReports(data);
-    } catch (err: any) {
-      setError(err.message || "Failed to load reports.");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleDelete(slug: string, companyName: string) {
     const confirmed = window.confirm(
@@ -54,8 +59,9 @@ export default function AdminDashboardPage() {
     try {
       await deleteReport(slug);
       setReports((prev) => prev.filter((r) => r.slug !== slug));
-    } catch (err: any) {
-      setError(err.message || "Couldn't delete this report.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Couldn't delete this report.";
+      setError(msg);
     } finally {
       setDeletingSlug(null);
     }
@@ -100,7 +106,7 @@ export default function AdminDashboardPage() {
       </div>
 
       <div
-        style={{ maxWidth: 980, margin: "0 auto", padding: "40px 24px 100px" }}
+        style={{ maxWidth: 980, margin: "0 auto", padding: "40px 24px" }}
       >
         <div
           style={{

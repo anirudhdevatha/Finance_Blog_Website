@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
-import { isCurrentUserAdmin } from "../lib/reports"; // Adjust path as needed
+import { supabase, isSupabaseConfigured } from "../lib/supabase";
+import { isCurrentUserAdmin } from "../lib/reports";
+import { FinancialDisclaimer } from "./FinancialDisclaimer";
 
 const navItems = [
   { label: "Research", to: "/research" },
@@ -21,11 +22,7 @@ export default function Layout() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const client = supabase;
-
-    if (!client) {
-      setIsAuthenticated(false);
-      setIsAdmin(false);
+    if (!isSupabaseConfigured) {
       return;
     }
 
@@ -33,7 +30,7 @@ export default function Layout() {
       try {
         const adminStatus = await isCurrentUserAdmin();
         setIsAdmin(adminStatus);
-      } catch (err) {
+      } catch {
         setIsAdmin(false);
       }
     };
@@ -41,7 +38,7 @@ export default function Layout() {
     const getSession = async () => {
       const {
         data: { session },
-      } = await client.auth.getSession();
+      } = await supabase.auth.getSession();
 
       const loggedIn = Boolean(session);
       setIsAuthenticated(loggedIn);
@@ -57,7 +54,7 @@ export default function Layout() {
 
     const {
       data: { subscription },
-    } = client.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const loggedIn = Boolean(session);
       setIsAuthenticated(loggedIn);
 
@@ -84,6 +81,8 @@ export default function Layout() {
         minHeight: "100vh",
         background: "#F7F7F5",
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <nav
@@ -225,7 +224,20 @@ export default function Layout() {
         </div>
       </nav>
 
-      <Outlet />
+      <div style={{ flex: 1 }}>
+        <Outlet />
+      </div>
+
+      <div
+        style={{
+          maxWidth: 1148,
+          width: "100%",
+          margin: "0 auto",
+          padding: "0 24px 32px",
+        }}
+      >
+        <FinancialDisclaimer variant="full" />
+      </div>
 
       <footer
         style={{
@@ -244,42 +256,31 @@ export default function Layout() {
             justifyContent: "center",
             gap: 16,
             flexWrap: "wrap",
-            marginBottom: 10,
+            marginBottom: 16,
           }}
         >
-          <Link
-            to="/research"
-            style={{ color: "#777", fontSize: 12, textDecoration: "none" }}
-          >
+          <Link to="/research" style={{ color: "#777", fontSize: 12, textDecoration: "none" }}>
             Research
           </Link>
-          <Link
-            to="/about"
-            style={{ color: "#777", fontSize: 12, textDecoration: "none" }}
-          >
+          <Link to="/about" style={{ color: "#777", fontSize: 12, textDecoration: "none" }}>
             About
           </Link>
-          <Link
-            to="/performance"
-            style={{ color: "#777", fontSize: 12, textDecoration: "none" }}
-          >
+          <Link to="/performance" style={{ color: "#777", fontSize: 12, textDecoration: "none" }}>
             Performance
           </Link>
+          <Link to="/privacy" style={{ color: "#777", fontSize: 12, textDecoration: "none" }}>
+            Privacy Policy
+          </Link>
+          <Link to="/terms" style={{ color: "#777", fontSize: 12, textDecoration: "none" }}>
+            Terms of Service
+          </Link>
 
-          {/* Conditionally render footer "Create Post" link if admin */}
           {isAdmin && (
-            <Link
-              to="/admin/new"
-              style={{ color: "#777", fontSize: 12, textDecoration: "none" }}
-            >
+            <Link to="/admin/new" style={{ color: "#777", fontSize: 12, textDecoration: "none" }}>
               Create Post
             </Link>
           )}
         </div>
-        <p style={{ fontSize: 11, color: "#333", margin: 0, lineHeight: 1.6 }}>
-          Research published for informational purposes only. Not investment
-          advice. Past performance is not indicative of future results.
-        </p>
       </footer>
     </div>
   );

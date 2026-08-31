@@ -26,7 +26,7 @@ export default function PerformancePage() {
       style={{
         maxWidth: 1180,
         margin: "0 auto",
-        padding: "48px 24px 96px",
+        padding: "48px 24px",
         color: "#111",
       }}
     >

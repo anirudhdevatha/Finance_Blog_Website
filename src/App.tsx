@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { RequireAdmin } from "./components/RequireAdmin";
+import Layout from "./components/Layout";
 import HomePage from "./pages/Homepage";
 import LoginPage from "./pages/LoginPage";
 import ReportPage from "./pages/ReportPage";
@@ -10,7 +11,8 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import PositionPage from "./pages/PositionPage";
 import SectorPage from "./pages/SectorPage";
 import PerformancePage from "./pages/PerformancePage";
-import Layout from "./components/Layout";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsPage from "./pages/TermsPage";
 import "./index.css";
 
 export default function App() {
@@ -24,7 +26,16 @@ export default function App() {
         <Route path="/sectors/:sector" element={<SectorPage />} />
         <Route path="/performance" element={<PerformancePage />} />
         <Route path="/reports/:slug" element={<ReportPage />} />
-        <Route path="/admin/new" element={<CreatePostPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route
+          path="/admin/new"
+          element={
+            <RequireAdmin>
+              <CreatePostPage />
+            </RequireAdmin>
+          }
+        />
         <Route
           path="/admin"
           element={
@@ -45,8 +56,7 @@ export default function App() {
           path="/create-post"
           element={
             <RequireAdmin>
-              {" "}
-              <CreatePostPage />{" "}
+              <CreatePostPage />
             </RequireAdmin>
           }
         />

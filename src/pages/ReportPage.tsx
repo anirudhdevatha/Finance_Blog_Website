@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { Rating, Report } from "../data/mockData";
 import { getReportBySlug } from "../lib/reports";
+import { sanitizeHtml } from "../lib/sanitize";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -277,12 +278,27 @@ export default function ReportPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let ignore = false;
     setLoading(true);
     setError(null);
+
     getReportBySlug(slug)
-      .then(setReport)
-      .catch(() => setError("We couldn't find that report."))
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (ignore) return;
+        setReport(data);
+        setError(null);
+      })
+      .catch(() => {
+        if (ignore) return;
+        setError("We couldn't find that report.");
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, [slug]);
 
   if (loading) {
@@ -340,7 +356,7 @@ export default function ReportPage() {
       style={{
         maxWidth: 820,
         margin: "0 auto",
-        padding: "48px 24px 96px",
+        padding: "48px 24px",
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
         color: "#111",
         lineHeight: 1.65,
@@ -572,7 +588,7 @@ export default function ReportPage() {
           color: "#222",
           marginBottom: 56,
         }}
-        dangerouslySetInnerHTML={{ __html: report.body }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(report.body) }}
       />
 
       <section>
@@ -621,22 +637,6 @@ export default function ReportPage() {
         </div>
       </section>
 
-      <div
-        style={{
-          marginTop: 56,
-          padding: "16px 20px",
-          background: "#F5F5F5",
-          borderRadius: 8,
-          fontSize: 12,
-          color: "#999",
-          lineHeight: 1.6,
-        }}
-      >
-        This report is published by Texas Valuation &amp; Modeling for
-        informational purposes only and does not constitute investment advice.
-        Past performance is not indicative of future results. Please see our
-        full disclosures page before acting on any information contained herein.
-      </div>
     </main>
   );
 }

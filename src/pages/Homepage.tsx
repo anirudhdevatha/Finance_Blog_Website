@@ -3,10 +3,7 @@ import { Link } from "react-router-dom";
 import type { Report, Rating } from "../data/mockData";
 import { getPublishedReports } from "../lib/reports";
 
-const RATING_STYLES: Record<
-  Rating,
-  { bg: string; text: string; border: string }
-> = {
+const RATING_STYLES: Record<Rating, { bg: string; text: string; border: string }> = {
   "Strong Buy": { bg: "#EAF3DE", text: "#27500A", border: "#639922" },
   Buy: { bg: "#E1F5EE", text: "#085041", border: "#1D9E75" },
   Hold: { bg: "#FAEEDA", text: "#633806", border: "#BA7517" },
@@ -416,7 +413,7 @@ export default function HomePage() {
           style={{
             maxWidth: 1100,
             margin: "0 auto",
-            padding: "48px 40px 96px",
+            padding: "48px 40px",
           }}
         >
           {loading && (
@@ -480,8 +477,7 @@ export default function HomePage() {
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fit, minmax(320px, 1fr))",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
                       gap: 16,
                     }}
                   >
@@ -556,9 +552,7 @@ export default function HomePage() {
                         fontFamily: "inherit",
                       }}
                     >
-                      {allSectors.map((s) => (
-                        <option key={s}>{s}</option>
-                      ))}
+                      {allSectors.map((s) => <option key={s}>{s}</option>)}
                     </select>
                     <select
                       value={ratingFilter}
@@ -576,14 +570,11 @@ export default function HomePage() {
                         fontFamily: "inherit",
                       }}
                     >
-                      {ALL_RATINGS.map((r) => (
-                        <option key={r}>{r}</option>
-                      ))}
+                      {ALL_RATINGS.map((r) => <option key={r}>{r}</option>)}
                     </select>
                   </div>
                 </div>
 
-                {/* Table header */}
                 <div
                   style={{
                     display: "grid",
@@ -595,30 +586,24 @@ export default function HomePage() {
                     border: "1px solid #E8E8E8",
                   }}
                 >
-                  {[
-                    "Ticker",
-                    "Company",
-                    "Rating",
-                    "Price",
-                    "Target",
-                    "Upside",
-                  ].map((h) => (
-                    <span
-                      key={h}
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: "#999",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                      }}
-                    >
-                      {h}
-                    </span>
-                  ))}
+                  {["Ticker", "Company", "Rating", "Price", "Target", "Upside"].map(
+                    (h) => (
+                      <span
+                        key={h}
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: "#999",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                        }}
+                      >
+                        {h}
+                      </span>
+                    ),
+                  )}
                 </div>
 
-                {/* Rows */}
                 <div
                   style={{
                     background: "#fff",

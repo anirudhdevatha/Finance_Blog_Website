@@ -19,14 +19,29 @@ export default function SectorPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let ignore = false;
     setLoading(true);
     setError(null);
+
     getReportsBySector(sector)
-      .then(setReports)
-      .catch((err) =>
-        setError(err.message || "Failed to load reports for this sector."),
-      )
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (ignore) return;
+        setReports(data);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (ignore) return;
+        const msg =
+          err instanceof Error ? err.message : "Failed to load reports for this sector.";
+        setError(msg);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, [sector]);
 
   return (
@@ -34,7 +49,7 @@ export default function SectorPage() {
       style={{
         maxWidth: 1100,
         margin: "0 auto",
-        padding: "48px 24px 96px",
+        padding: "48px 24px",
         color: "#111",
       }}
     >

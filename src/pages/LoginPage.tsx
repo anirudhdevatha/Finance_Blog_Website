@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase, isSupabaseConfigured } from "../lib/supabase";
 
 type AuthMode = "login" | "signup";
 
@@ -10,13 +10,14 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(
+    !isSupabaseConfigured
+      ? "Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file."
+      : ""
+  );
 
   useEffect(() => {
-    if (!supabase) {
-      setMessage(
-        "Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file.",
-      );
+    if (!isSupabaseConfigured) {
       return;
     }
 
@@ -33,8 +34,20 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabase) {
+    if (!isSupabaseConfigured) {
       setMessage("Supabase is not configured.");
+      return;
+    }
+
+    const cleanEmail = email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      setMessage("Please provide a valid email address.");
+      return;
+    }
+
+    if (mode === "signup" && password.length < 8) {
+      setMessage("Password must be at least 8 characters long.");
       return;
     }
 
@@ -44,14 +57,17 @@ export default function LoginPage() {
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: cleanEmail,
           password,
         });
         if (error) throw error;
         setMessage("Signed in successfully.");
         navigate("/", { replace: true });
       } else {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+        });
         if (error) throw error;
         setMessage("Account created. You’re being redirected to the homepage.");
         navigate("/", { replace: true });
@@ -342,6 +358,25 @@ export default function LoginPage() {
                 {message}
               </p>
             ) : null}
+
+            <p
+              style={{
+                fontSize: 12,
+                color: "#666",
+                lineHeight: 1.5,
+                margin: "4px 0 10px",
+                textAlign: "center",
+              }}
+            >
+              By continuing, you agree to TVM's{" "}
+              <Link to="/terms" style={{ color: "#185FA5", textDecoration: "underline" }}>
+                Terms of Service
+              </Link>{" "}
+              and acknowledge our{" "}
+              <Link to="/privacy" style={{ color: "#185FA5", textDecoration: "underline" }}>
+                Privacy Policy
+              </Link>.
+            </p>
 
             <button
               type="submit"

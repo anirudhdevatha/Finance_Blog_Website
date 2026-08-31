@@ -362,9 +362,12 @@ export default function CreatePostPage() {
   useEffect(() => {
     if (!editSlug) return;
 
+    let ignore = false;
     setLoadingExisting(true);
+
     getReportForEdit(editSlug)
       .then((report) => {
+        if (ignore) return;
         setForm({
           ticker: report.ticker,
           companyName: report.companyName,
@@ -386,10 +389,19 @@ export default function CreatePostPage() {
           existingPdfUrl: report.pdfUrl ?? null,
         });
       })
-      .catch((err) =>
-        setError(err.message || "Couldn't load that report for editing."),
-      )
-      .finally(() => setLoadingExisting(false));
+      .catch((err: unknown) => {
+        if (ignore) return;
+        const msg =
+          err instanceof Error ? err.message : "Couldn't load that report for editing.";
+        setError(msg);
+      })
+      .finally(() => {
+        if (!ignore) setLoadingExisting(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, [editSlug]);
 
   const set = <K extends keyof PostForm>(key: K, value: PostForm[K]) =>
@@ -399,17 +411,35 @@ export default function CreatePostPage() {
   const saveReport = async (status: "draft" | "published") => {
     setError(null);
 
-    if (!form.ticker || !form.companyName || !form.sector || !form.analyst) {
+    const tickerTrimmed = form.ticker.trim();
+    const companyNameTrimmed = form.companyName.trim();
+    const sectorTrimmed = form.sector.trim();
+    const analystTrimmed = form.analyst.trim();
+    const curPriceNum = parseFloat(form.currentPrice);
+    const tgtPriceNum = parseFloat(form.targetPrice);
+
+    if (!tickerTrimmed || !companyNameTrimmed || !sectorTrimmed || !analystTrimmed) {
       setError("Ticker, company name, sector, and analyst are required.");
       return;
     }
-    if (!form.currentPrice || !form.targetPrice) {
-      setError("Current price and target price are required.");
+    if (
+      isNaN(curPriceNum) ||
+      curPriceNum < 0 ||
+      isNaN(tgtPriceNum) ||
+      tgtPriceNum < 0
+    ) {
+      setError(
+        "Current price and target price must be valid non-negative numbers.",
+      );
       return;
     }
 
     const isPublish = status === "published";
-    isPublish ? setPublishing(true) : setSavingDraft(true);
+    if (isPublish) {
+      setPublishing(true);
+    } else {
+      setSavingDraft(true);
+    }
 
     try {
       // A new upload overrides the existing file; otherwise keep what's already saved.
@@ -421,16 +451,16 @@ export default function CreatePostPage() {
         : (form.existingPdfUrl ?? undefined);
 
       const payload = {
-        ticker: form.ticker,
-        companyName: form.companyName,
-        sector: form.sector,
-        analyst: form.analyst,
+        ticker: tickerTrimmed,
+        companyName: companyNameTrimmed,
+        sector: sectorTrimmed,
+        analyst: analystTrimmed,
         rating: form.rating,
-        currentPrice: parseFloat(form.currentPrice),
-        targetPrice: parseFloat(form.targetPrice),
-        executiveSummary: form.executiveSummary,
+        currentPrice: curPriceNum,
+        targetPrice: tgtPriceNum,
+        executiveSummary: form.executiveSummary.trim(),
         featured: false,
-        timeHorizon: form.timeHorizon,
+        timeHorizon: form.timeHorizon.trim(),
         investmentHighlights: form.investmentHighlights.filter(
           (v) => v.trim() !== "",
         ),
@@ -451,14 +481,15 @@ export default function CreatePostPage() {
         setPublishedSlug(report.slug);
         setPublished(true);
       } else {
-        // Draft saved quietly — stay on the page so the analyst can keep editing.
         setError(null);
         alert("Draft saved.");
       }
-    } catch (err: any) {
-      setError(
-        err.message || "Something went wrong while saving. Please try again.",
-      );
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while saving. Please try again.";
+      setError(msg);
     } finally {
       setPublishing(false);
       setSavingDraft(false);
@@ -486,8 +517,9 @@ export default function CreatePostPage() {
     try {
       await deleteReport(editSlug);
       navigate("/admin");
-    } catch (err: any) {
-      setError(err.message || "Couldn't delete this report.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Couldn't delete this report.";
+      setError(msg);
       setDeleting(false);
     }
   };
@@ -653,7 +685,7 @@ export default function CreatePostPage() {
 
       <form
         onSubmit={handlePublish}
-        style={{ maxWidth: 760, margin: "0 auto", padding: "40px 24px 100px" }}
+        style={{ maxWidth: 760, margin: "0 auto", padding: "40px 24px" }}
       >
         <div style={{ marginBottom: 28 }}>
           <h1

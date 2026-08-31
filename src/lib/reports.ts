@@ -1,7 +1,6 @@
 import { supabase } from './supabase';
 import type { Report, ThesisUpdate } from '../data/mockData';
 
-// ---- Row shape as it comes back from Postgres (snake_case) ----
 interface ReportRow {
   slug: string;
   ticker: string;
@@ -27,7 +26,6 @@ interface ReportRow {
   status: 'draft' | 'published';
 }
 
-// ---- Convert DB row -> the Report shape your components already use ----
 function mapRowToReport(row: ReportRow): Report {
   return {
     slug: row.slug,
@@ -37,24 +35,22 @@ function mapRowToReport(row: ReportRow): Report {
     analyst: row.analyst,
     publishedAt: row.published_at,
     rating: row.rating,
-    currentPrice: row.current_price,
-    targetPrice: row.target_price,
+    currentPrice: Number(row.current_price) || 0,
+    targetPrice: Number(row.target_price) || 0,
     executiveSummary: row.executive_summary,
     featured: row.featured,
     timeHorizon: row.time_horizon,
-    investmentHighlights: row.investment_highlights,
-    riskFactors: row.risk_factors,
+    investmentHighlights: Array.isArray(row.investment_highlights) ? row.investment_highlights : [],
+    riskFactors: Array.isArray(row.risk_factors) ? row.risk_factors : [],
     body: row.body,
-    catalysts: row.catalysts,
+    catalysts: Array.isArray(row.catalysts) ? row.catalysts : [],
     pptxUrl: row.pptx_url ?? undefined,
     pdfUrl: row.pdf_url ?? undefined,
-    slideThumbnails: row.slide_thumbnails,
-    thesisHistory: row.thesis_history,
-    relatedTickers: row.related_tickers,
+    slideThumbnails: Array.isArray(row.slide_thumbnails) ? row.slide_thumbnails : [],
+    thesisHistory: Array.isArray(row.thesis_history) ? row.thesis_history : [],
+    relatedTickers: Array.isArray(row.related_tickers) ? row.related_tickers : [],
   };
 }
-
-// ─── Public reads ──────────────────────────────────────────────────────────
 
 export async function getPublishedReports(): Promise<Report[]> {
   const { data, error } = await supabase
@@ -80,10 +76,11 @@ export async function getFeaturedReports(): Promise<Report[]> {
 }
 
 export async function getReportBySlug(slug: string): Promise<Report> {
+  const sanitizedSlug = slug.replace(/[^a-zA-Z0-9_-]/g, '');
   const { data, error } = await supabase
     .from('reports')
     .select('*')
-    .eq('slug', slug)
+    .eq('slug', sanitizedSlug)
     .single();
 
   if (error) throw error;
@@ -102,13 +99,6 @@ export async function getReportsBySector(sector: string): Promise<Report[]> {
   return (data as ReportRow[]).map(mapRowToReport);
 }
 
-// ─── Admin-only reads ──────────────────────────────────────────────────────
-// These rely on the "Admins read all reports" RLS policy (Step 4 of the setup
-// guide) to also see drafts. A non-admin calling these just gets published
-// rows back, same as the public functions above — RLS quietly filters it.
-
-// The public Report type deliberately has no `status` field — public pages
-// never need it. The admin dashboard does, so it gets its own type.
 export interface AdminReport extends Report {
   status: 'draft' | 'published';
 }
@@ -126,27 +116,36 @@ export async function getAdminReports(): Promise<AdminReport[]> {
   }));
 }
 
-// Same query as getReportBySlug, kept as a separate name so it's clear in
-// CreatePostPage that loading a report for *editing* is an admin-only path,
-// even though today it happens to hit the same table/row.
 export async function getReportForEdit(slug: string): Promise<Report> {
   return getReportBySlug(slug);
 }
 
-// ─── Uploads ────────────────────────────────────────────────────────────────
+const ALLOWED_UPLOAD_EXTENSIONS = new Set(['pdf', 'pptx', 'ppt', 'png', 'jpg', 'jpeg', 'webp']);
+const MAX_UPLOAD_SIZE_BYTES = 50 * 1024 * 1024;
 
 export async function uploadReportAsset(file: File): Promise<string> {
-  const ext = file.name.split('.').pop();
+  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+    throw new Error('File size exceeds the 50MB maximum allowed limit.');
+  }
+
+  const ext = file.name.split('.').pop()?.toLowerCase() || '';
+  if (!ALLOWED_UPLOAD_EXTENSIONS.has(ext)) {
+    throw new Error(
+      `Invalid file type ".${ext}". Allowed types: ${Array.from(ALLOWED_UPLOAD_EXTENSIONS).join(', ')}`
+    );
+  }
+
   const fileName = `${crypto.randomUUID()}.${ext}`;
 
-  const { error } = await supabase.storage.from('report-assets').upload(fileName, file);
+  const { error } = await supabase.storage
+    .from('report-assets')
+    .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
   if (error) throw error;
 
   const { data } = supabase.storage.from('report-assets').getPublicUrl(fileName);
   return data.publicUrl;
 }
-
-// ─── Create / update / delete (admin-only, enforced by RLS) ────────────────
 
 export interface ReportInput {
   ticker: string;
@@ -170,23 +169,37 @@ export interface ReportInput {
   status: 'draft' | 'published';
 }
 
+function validateReportInput(input: ReportInput) {
+  if (!input.ticker?.trim() || !input.companyName?.trim()) {
+    throw new Error('Ticker and Company Name are required.');
+  }
+  if (Number.isNaN(input.currentPrice) || input.currentPrice < 0) {
+    throw new Error('Current price must be a valid non-negative number.');
+  }
+  if (Number.isNaN(input.targetPrice) || input.targetPrice < 0) {
+    throw new Error('Target price must be a valid non-negative number.');
+  }
+}
+
 export async function createReport(input: ReportInput): Promise<Report> {
-  const slug = `${input.ticker.toLowerCase()}-${Date.now()}`;
+  validateReportInput(input);
+  const cleanTicker = input.ticker.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const slug = `${cleanTicker.toLowerCase()}-${Date.now()}`;
 
   const { data, error } = await supabase
     .from('reports')
     .insert({
       slug,
-      ticker: input.ticker,
-      company_name: input.companyName,
-      sector: input.sector,
-      analyst: input.analyst,
+      ticker: cleanTicker,
+      company_name: input.companyName.trim(),
+      sector: input.sector.trim(),
+      analyst: input.analyst.trim(),
       rating: input.rating,
       current_price: input.currentPrice,
       target_price: input.targetPrice,
-      executive_summary: input.executiveSummary,
-      featured: input.featured,
-      time_horizon: input.timeHorizon,
+      executive_summary: input.executiveSummary.trim(),
+      featured: Boolean(input.featured),
+      time_horizon: input.timeHorizon.trim(),
       investment_highlights: input.investmentHighlights,
       risk_factors: input.riskFactors,
       body: input.body,
@@ -207,15 +220,10 @@ export async function createReport(input: ReportInput): Promise<Report> {
   return mapRowToReport(data as ReportRow);
 }
 
-// Updates a report in place. Pass the *existing* slug — the slug itself never
-// changes on edit, since it's what the URL and any external links depend on.
-//
-// If the price target changed since the last save, this appends a new
-// thesis_history entry automatically so the report's "Thesis history" section
-// keeps a running log of target changes, the same way the original mock data
-// modeled it.
 export async function updateReport(slug: string, input: ReportInput): Promise<Report> {
-  const existing = await getReportBySlug(slug);
+  validateReportInput(input);
+  const sanitizedSlug = slug.replace(/[^a-zA-Z0-9_-]/g, '');
+  const existing = await getReportBySlug(sanitizedSlug);
   const targetChanged = existing.targetPrice !== input.targetPrice;
 
   const nextThesisHistory = targetChanged
@@ -228,16 +236,16 @@ export async function updateReport(slug: string, input: ReportInput): Promise<Re
   const { data, error } = await supabase
     .from('reports')
     .update({
-      ticker: input.ticker,
-      company_name: input.companyName,
-      sector: input.sector,
-      analyst: input.analyst,
+      ticker: input.ticker.trim().toUpperCase().replace(/[^A-Z0-9]/g, ''),
+      company_name: input.companyName.trim(),
+      sector: input.sector.trim(),
+      analyst: input.analyst.trim(),
       rating: input.rating,
       current_price: input.currentPrice,
       target_price: input.targetPrice,
-      executive_summary: input.executiveSummary,
-      featured: input.featured,
-      time_horizon: input.timeHorizon,
+      executive_summary: input.executiveSummary.trim(),
+      featured: Boolean(input.featured),
+      time_horizon: input.timeHorizon.trim(),
       investment_highlights: input.investmentHighlights,
       risk_factors: input.riskFactors,
       body: input.body,
@@ -249,7 +257,7 @@ export async function updateReport(slug: string, input: ReportInput): Promise<Re
       thesis_history: nextThesisHistory,
       status: input.status,
     })
-    .eq('slug', slug)
+    .eq('slug', sanitizedSlug)
     .select()
     .single();
 
@@ -258,11 +266,10 @@ export async function updateReport(slug: string, input: ReportInput): Promise<Re
 }
 
 export async function deleteReport(slug: string): Promise<void> {
-  const { error } = await supabase.from('reports').delete().eq('slug', slug);
+  const sanitizedSlug = slug.replace(/[^a-zA-Z0-9_-]/g, '');
+  const { error } = await supabase.from('reports').delete().eq('slug', sanitizedSlug);
   if (error) throw error;
 }
-
-// ─── Admin check ────────────────────────────────────────────────────────────
 
 export async function isCurrentUserAdmin(): Promise<boolean> {
   const { data: userData } = await supabase.auth.getUser();
@@ -275,5 +282,5 @@ export async function isCurrentUserAdmin(): Promise<boolean> {
     .maybeSingle();
 
   if (error) return false;
-  return !!data;
+  return Boolean(data);
 }

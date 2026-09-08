@@ -21,3 +21,296 @@ html, body {
   display: flex;
   flex-direction: column;
 }
+
+.about-page {
+  max-width: 1148px;
+  margin: 0 auto;
+  padding: 72px 24px 64px;
+  color: #111;
+}
+
+.about-kicker {
+  margin: 0 0 14px;
+  color: #397bc8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.about-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(240px, 0.55fr);
+  gap: 64px;
+  align-items: end;
+  padding-bottom: 64px;
+  border-bottom: 1px solid #dcdedb;
+}
+
+.about-hero h1 {
+  max-width: 760px;
+  margin: 0;
+  font-size: clamp(42px, 6vw, 76px);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+
+.about-hero-lede {
+  max-width: 590px;
+  margin: 28px 0 0;
+  color: #555b60;
+  font-size: 19px;
+  line-height: 1.55;
+}
+
+.about-hero-note {
+  padding: 20px 0 0 24px;
+  border-left: 2px solid #397bc8;
+}
+
+.about-note-mark {
+  display: block;
+  margin-bottom: 28px;
+  color: #737a80;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.about-hero-note p {
+  margin: 0;
+  color: #252a2e;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.about-thesis {
+  max-width: 760px;
+  padding: 64px 0 72px;
+}
+
+.about-thesis-label {
+  margin: 0 0 20px;
+  color: #737a80;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.about-thesis h2,
+.about-section-heading h2,
+.about-cta h2 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.about-thesis > p:last-child {
+  max-width: 610px;
+  margin: 20px 0 0;
+  color: #555b60;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.about-principles {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.3fr);
+  gap: 64px;
+  padding: 52px 0 72px;
+  border-top: 1px solid #dcdedb;
+}
+
+.about-principle-list {
+  border-top: 1px solid #dcdedb;
+}
+
+.about-principle {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 20px;
+  padding: 22px 0 24px;
+  border-bottom: 1px solid #dcdedb;
+}
+
+.about-principle-number {
+  color: #397bc8;
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.about-principle h3 {
+  margin: 0 0 8px;
+  font-size: 19px;
+  font-weight: 750;
+}
+
+.about-principle p {
+  max-width: 600px;
+  margin: 0;
+  color: #555b60;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.about-team {
+  padding: 12px 0 72px;
+}
+
+.about-team-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.about-team-heading > p {
+  max-width: 250px;
+  margin: 0 0 3px;
+  color: #555b60;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.about-team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.about-member {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #dcdedb;
+}
+
+.about-member img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.about-member-info {
+  padding: 18px 20px 20px;
+}
+
+.about-member-info h3 {
+  margin: 0 0 5px;
+  font-size: 18px;
+  font-weight: 750;
+}
+
+.about-member-info p {
+  margin: 0;
+  color: #397bc8;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.about-cta {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 32px;
+  padding: 32px 36px;
+  background: #eaf3de;
+  border: 1px solid #c0dd97;
+}
+
+.about-cta h2 {
+  font-size: clamp(24px, 3vw, 34px);
+}
+
+.about-cta > div > p:last-child {
+  margin: 12px 0 0;
+  color: #3b6d11;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.about-cta a {
+  flex: 0 0 auto;
+  padding: 11px 16px;
+  color: #fff;
+  background: #0d1117;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.about-cta a span {
+  margin-left: 8px;
+}
+
+@media (max-width: 720px) {
+  .about-page {
+    padding: 48px 20px 40px;
+  }
+
+  .about-hero {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    padding-bottom: 48px;
+  }
+
+  .about-hero h1 {
+    font-size: clamp(42px, 14vw, 62px);
+  }
+
+  .about-hero-lede {
+    font-size: 17px;
+  }
+
+  .about-thesis {
+    padding: 48px 0 56px;
+  }
+
+  .about-principles {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding: 40px 0 56px;
+  }
+
+  .about-team {
+    padding-bottom: 56px;
+  }
+
+  .about-team-heading,
+  .about-cta {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .about-team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-member {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+  }
+
+  .about-member img {
+    height: 100%;
+    min-height: 110px;
+  }
+
+  .about-member-info {
+    align-self: center;
+  }
+
+  .about-cta {
+    gap: 24px;
+    padding: 28px 24px;
+  }
+}

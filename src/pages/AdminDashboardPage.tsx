@@ -14,6 +14,17 @@ const RATING_COLORS: Record<string, string> = {
   "Strong Sell": "#791F1F",
 };
 
+function formatPublishedDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
 export default function AdminDashboardPage() {
   const [reports, setReports] = useState<AdminReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -311,8 +322,15 @@ export default function AdminDashboardPage() {
                 >
                   {report.status}
                 </span>
-                <span style={{ fontSize: 13, color: "#888" }}>
-                  {report.publishedAt}
+                <span
+                  title={report.publishedAt}
+                  style={{
+                    fontSize: 13,
+                    color: "#888",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {formatPublishedDate(report.publishedAt)}
                 </span>
                 <div
                   style={{

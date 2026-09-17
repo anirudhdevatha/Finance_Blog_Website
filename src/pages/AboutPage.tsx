@@ -28,7 +28,7 @@ const sections = [
 
 const team = [
   {
-    name: "Krishna Suhas",
+    name: "Krishna Chiripurapu",
     role: "Asset Managing Director",
     image: krishnaSuhas,
   },
